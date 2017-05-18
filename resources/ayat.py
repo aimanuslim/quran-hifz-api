@@ -8,13 +8,13 @@ class Ayat(Resource):
     parser.add_argument('surah',
         type=str,
         required=True,
-        help="This field cannot be left blank!"
+        help="This surah cannot be left blank!"
     )
 
     parser.add_argument('number',
         type=int,
         required=True,
-        help="This field cannot be left blank!"
+        help="This number cannot be left blank!"
     )
 
     parser.add_argument('theme',
@@ -30,7 +30,7 @@ class Ayat(Resource):
     )
 
     parser.add_argument('date_refreshed',
-        type=lambda x: datetime.strptime(x,'%Y-%m-%dT%H')),
+        type=lambda x: datetime.strptime(x,'%Y-%m-%dT%H'),
         required=False,
         help="This field is to specify the last time this ayat was refreshed"
     )
@@ -40,7 +40,7 @@ class Ayat(Resource):
         required=False,
         help="This field is for you to specify ayat's difficulty, range 0-5, from easiest to hardest"
     )
-    
+
 
 
 
@@ -63,26 +63,26 @@ class Ayat(Resource):
     #     help="Every item needs a store_id."
     # )
 
-    @jwt_required()
-    def get(self, surah, number):
-        ayat = AyatModel.find_by_surah_number(surah, number)
-        
+    # @jwt_required()
+    def get(self):
+        ayat = AyatModel.find_by_surah_number(data.get('surah'), data.get('number'))
+
         if ayat:
             return ayat.json()
-        return {'message': 'Item not found'}, 404
+        return {'message': 'Ayat not found'}, 404
 
         # item = ItemModel.find_by_name(name)
         # if item:
         #     return item.json()
         # return {'message': 'Item not found'}, 404
 
-    def post(self, surah, number):
-        if AyatModel.find_by_surah_number(surah, number):
-            return {'message': "This ayat is already in database.", 400
-
+    def post(self):
         data = Ayat.parser.parse_args()
 
-        ayat = AyatModel(data.get('surah'), 
+        if AyatModel.find_by_surah_number(data.get('surah'), data.get('number')):
+            return {'message': "This ayat is already in database."}, 400
+
+        ayat = AyatModel(data.get('surah'),
             data.get('number'),
             data.get('date_refreshed'),
             data.get('difficulty'),
@@ -95,7 +95,7 @@ class Ayat(Resource):
         except:
             return {"message": "An error occurred inserting the ayat."}, 500
 
-        return ayat.json(), 201        
+        return ayat.json(), 201
 
 
         # if ItemModel.find_by_name(name):
@@ -148,6 +148,6 @@ class Ayat(Resource):
 
         return item.json()
 
-class ItemList(Resource):
+class AyatGroup(Resource):
     def get(self):
-        return {'items': list(map(lambda x: x.json(), ItemModel.query.all()))}
+        return {'ayats': list(map(lambda x: x.json(), AyatModel.query.all()))}
