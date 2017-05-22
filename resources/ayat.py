@@ -1,6 +1,7 @@
 from flask_restful import Resource, reqparse
-from flask_jwt import jwt_required
+from flask_jwt import JWT, jwt_required, current_identity
 from models.ayat import AyatModel
+
 
 class Ayat(Resource):
     parser = reqparse.RequestParser()
@@ -8,13 +9,13 @@ class Ayat(Resource):
     parser.add_argument('surah',
         type=str,
         required=True,
-        help="This surah cannot be left blank!"
+        help="Surah argument cannot be left blank!"
     )
 
     parser.add_argument('number',
         type=int,
         required=True,
-        help="This number cannot be left blank!"
+        help="Surah number cannot be left blank!"
     )
 
     parser.add_argument('theme',
@@ -63,26 +64,27 @@ class Ayat(Resource):
     #     help="Every item needs a store_id."
     # )
 
-    # @jwt_required()
+    @jwt_required()
     def get(self):
+        data = Ayat.parser.parse_args()
+        print("surah is {} and number is {}".format(data.get('surah'),data.get('number')))
         ayat = AyatModel.find_by_surah_number(data.get('surah'), data.get('number'))
 
         if ayat:
             return ayat.json()
         return {'message': 'Ayat not found'}, 404
 
-        # item = ItemModel.find_by_name(name)
-        # if item:
-        #     return item.json()
-        # return {'message': 'Item not found'}, 404
-
+    @jwt_required()
     def post(self):
         data = Ayat.parser.parse_args()
 
         if AyatModel.find_by_surah_number(data.get('surah'), data.get('number')):
             return {'message': "This ayat is already in database."}, 400
 
-        ayat = AyatModel(data.get('surah'),
+        if not AyatModel.surah_exist(data.get('surah')):
+            return {'message': "Surah is not valid"}, 400
+
+        ayat = AyatModel(str(current_identity.id), data.get('surah'),
             data.get('number'),
             data.get('date_refreshed'),
             data.get('difficulty'),
@@ -112,42 +114,43 @@ class Ayat(Resource):
 
         # return item.json(), 201
 
-    def delete(self, name):
-        item = ItemModel.find_by_name(name)
-        if item:
-            item.delete_from_db()
-
-        return {'message': 'Item deleted'}
-
-    def put(self, name):
+    def delete(self):
         data = Ayat.parser.parse_args()
+        # TODO: delete by using filter
+        ayat = AyatModel.find_by_surah_number(data.get('surah'), data.get('number'))
+        if ayat:
+            ayat.delete_from_db()
+            return {'message': 'Ayat deleted'}
+        return {'message': 'Ayat not found'}, 400
 
-        item = ItemModel.find_by_name(name)
+    def put(self):
+        data = Ayat.parser.parse_args()
+        ayat = AyatModel.find_by_surah_number(data.get('surah'), data.get('number'))
 
-        if item:
-            item.price = data['price']
+
+        if ayat:
+            ayat.surah = data.get('surah')
+            ayat.number = data.get('number')
+            ayat.last_refreshed = data.get('date_refreshed')
+            ayat.hifz_strength = data.get('hifz_strength')
+            ayat.theme = data.get('theme')
+            ayat.note  = data.get('note')
         else:
-            item = ItemModel(name, data['price'])
+            ayat = AyatModel(str(current_identity.id), data.get('surah'),
+                data.get('number'),
+                data.get('date_refreshed'),
+                data.get('difficulty'),
+                data.get('theme'),
+                data.get('note')
+                )
 
-        item.save_to_db()
 
-        return item.json()
+        ayat.save_to_db()
 
+        return ayat.json()
 
-
-        data = Item.parser.parse_args()
-
-        item = ItemModel.find_by_name(name)
-
-        if item:
-            item.price = data['price']
-        else:
-            item = ItemModel(name, data['price'])
-
-        item.save_to_db()
-
-        return item.json()
 
 class AyatGroup(Resource):
+    @jwt_required()
     def get(self):
-        return {'ayats': list(map(lambda x: x.json(), AyatModel.query.all()))}
+        return {'ayats': list(map(lambda x: x.json(), AyatModel.query.filter_by(ownerID=str(current_identity.id)  )))  }

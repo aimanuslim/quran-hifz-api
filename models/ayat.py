@@ -1,5 +1,6 @@
 from db import db
 
+
 class AyatModel(db.Model):
     __tablename__ = 'ayats'
 
@@ -11,8 +12,8 @@ class AyatModel(db.Model):
     last_refreshed = db.Column(db.DateTime)
     hifz_strength = db.Column(db.Integer)
     note = db.Column(db.Text)
-
-
+    theme = db.Column(db.Text)
+    ownerID = db.Column(db.Integer)
 
 
 
@@ -22,10 +23,11 @@ class AyatModel(db.Model):
     # store_id = db.Column(db.Integer, db.ForeignKey('stores.id'))
     # store = db.relationship('StoreModel')
 
-    def __init__(self, surah, number, date_refreshed, hifz_strength, theme, note):
+    def __init__(self, ownerID, surah, number, date_refreshed, hifz_strength, theme, note):
+        self.ownerID = ownerID
         self.surah = surah
         self.number = number
-        self.juz = self.lookup_juz(surah, number)
+        # self.juz = self.lookup_juz(surah, number)
 
         self.revisit_frequency = 0
         self.last_refreshed = date_refreshed
@@ -36,7 +38,7 @@ class AyatModel(db.Model):
 
 
     def json(self):
-        return {'surah': self.surah, 'juz': self.juz, 'number': self.number, 'revisit_frequency': self.revisit_frequency, 'last_refreshed': self.date_refreshed, 'hifz_strength': self.hifz_strength, 'theme': self.theme}
+        return {'owner': self.ownerID, 'surah': self.surah, 'juz': self.juz, 'number': self.number, 'revisit_frequency': self.revisit_frequency, 'last_refreshed': self.last_refreshed, 'hifz_strength': self.hifz_strength, 'theme': self.theme, 'note': self.note}
 
     @classmethod
     def find_by_name(cls, name):
@@ -45,6 +47,12 @@ class AyatModel(db.Model):
     def find_by_surah_number(cls, surah, number):
         return cls.query.filter_by(surah=surah, number=number).first()
 
+
+    @classmethod
+    def surah_exist(cls, surah):
+        from common.quran_data import surah_list
+        print(surah_list)
+        return surah in surah_list
 
     def save_to_db(self):
         db.session.add(self)
