@@ -10,10 +10,17 @@ class Bot(Resource):
         # when the endpoint is registered as a webhook, it must echo back
         # the 'hub.challenge' value it receives in the query arguments
         if request.args.get("hub.mode") == "subscribe" and request.args.get("hub.challenge"):
-            if not request.args.get("hub.verify_token") == os.environ["VERIFY_TOKEN"]:
+            string = request.args.get("hub.verify_token")
+            req = ''.join(e for e in string if e.isalnum())
+            string = os.environ["VERIFY_TOKEN"]
+            osvar = ''.join(e for e in string if e.isalnum())
+            if not req == osvar:
                 return "Verification token mismatch", 403
-            print("OS: " + repr(os.environ["VERIFY_TOKEN"]))
-            print("REQ: " + repr(request.args.get("hub.verify_token")))
+
+            # if not request.args.get("hub.verify_token") == os.environ["VERIFY_TOKEN"]:
+            #     return "Verification token mismatch", 403
+            # print("OS: " + repr(os.environ["VERIFY_TOKEN"]))
+            # print("REQ: " + repr(request.args.get("hub.verify_token")))
             return request.args["hub.challenge"], 200
 
         return "Hello world", 200
