@@ -24,7 +24,7 @@ class Bot(Resource):
             return request.args["hub.challenge"], 200
             return "quran_hifz", 200
 
-        return "Hello world", 200
+        return "quran_hifz", 200
 
     def post(self):
         data = request.get_json()
