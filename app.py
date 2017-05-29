@@ -17,18 +17,18 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'jose'
 api = Api(app)
 
+@app.before_first_request
+def create_tables():
+    db.create_all()
 
+@app.before_first_request
+def intialize_quran_data():
+    populate_surah_data()
 
 jwt = JWT(app, authenticate, identity)  # /auth
 
-api.add_resource(Store, '/store/<string:name>')
-api.add_resource(Item, '/item/<string:name>')
-api.add_resource(ItemList, '/items')
 api.add_resource(Ayat, '/ayat')
 api.add_resource(AyatGroup, '/ayats')
-api.add_resource(Bot, '/')
-# api.add_resource(Item, '/item')
-
 api.add_resource(UserRegister, '/register')
 
 if __name__ == '__main__':
