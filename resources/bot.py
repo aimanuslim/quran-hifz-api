@@ -24,6 +24,7 @@ class Bot(Resource):
             # return request.args["hub.challenge"], 200
             challenge = request.args["hub.challenge"]
             challenge = ''.join(e for e in challenge if e.isalnum())
+            print("Challenge: " + repr(challenge))
             return challenge, 200
 
         return "quran_hifz", 200
