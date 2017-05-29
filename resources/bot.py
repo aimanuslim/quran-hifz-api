@@ -21,7 +21,7 @@ class Bot(Resource):
             #     return "Verification token mismatch", 403
             # print("OS: " + repr(os.environ["VERIFY_TOKEN"]))
             # print("REQ: " + repr(request.args.get("hub.verify_token")))
-            return request.args["hub.challenge"], 200
+            # return request.args["hub.challenge"], 200
             return "quran_hifz", 200
 
         return "quran_hifz", 200
