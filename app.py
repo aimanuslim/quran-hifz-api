@@ -17,13 +17,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'jose'
 api = Api(app)
 
-@app.before_first_request
-def create_tables():
-    db.create_all()
-
-@app.before_first_request
-def intialize_quran_data():
-    populate_surah_data()
 
 
 jwt = JWT(app, authenticate, identity)  # /auth
