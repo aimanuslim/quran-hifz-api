@@ -9,6 +9,7 @@ from resources.store import Store
 from resources.ayat import Ayat
 from resources.ayat import AyatGroup
 from resources.bot import Bot
+from common.quran_data import populate_surah_data
 
 
 app = Flask(__name__)

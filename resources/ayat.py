@@ -64,25 +64,31 @@ class Ayat(Resource):
     #     help="Every item needs a store_id."
     # )
 
-    @jwt_required()
-    def get(self):
-        data = Ayat.parser.parse_args()
-        print("surah is {} and number is {}".format(data.get('surah'),data.get('number')))
-        ayat = AyatModel.find_by_surah_number(data.get('surah'), data.get('number'))
-
-        if ayat:
-            return ayat.json()
-        return {'message': 'Ayat not found'}, 404
+    # @jwt_required()
+    # def get(self):
+    #     data = Ayat.parser.parse_args()
+    #     if data.get('surah') and data.get('number'):
+    #
+    #     print("surah is {} and number is {}".format(data.get('surah'),data.get('number')))
+    #
+    #     ayat = AyatModel.find_by_surah_number(data.get('surah'), data.get('number'))
+    #
+    #     if ayat:
+    #         return ayat.json()
+    #     return {'message': 'Ayat not found'}, 404
 
     @jwt_required()
     def post(self):
         data = Ayat.parser.parse_args()
 
-        if AyatModel.find_by_surah_number(data.get('surah'), data.get('number')):
+        if AyatModel.find_by_surah_number(str(current_identity.id), data.get('surah'), data.get('number')):
             return {'message': "This ayat is already in database."}, 400
 
         if not AyatModel.surah_exist(data.get('surah')):
             return {'message': "Surah is not valid"}, 400
+
+        if  not AyatModel.ayat_in_range(data.get('surah'), data.get('number')):
+            return {'message': "Ayat is out of range"}, 400
 
         ayat = AyatModel(str(current_identity.id), data.get('surah'),
             data.get('number'),

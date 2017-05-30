@@ -1,5 +1,6 @@
 from db import db
-
+import difflib
+import pdb
 
 class AyatModel(db.Model):
     __tablename__ = 'ayats'
@@ -36,23 +37,58 @@ class AyatModel(db.Model):
         self.note = note
 
 
-
     def json(self):
         return {'owner': self.ownerID, 'surah': self.surah, 'juz': self.juz, 'number': self.number, 'revisit_frequency': self.revisit_frequency, 'last_refreshed': self.last_refreshed, 'hifz_strength': self.hifz_strength, 'theme': self.theme, 'note': self.note}
 
+    # @classmethod
+    # def find_by_name(cls, ownerID, name):
+    #     # return cls.query.filter_by(name=name).first()
+    #     ayat_list = AyatModel.query.filter_by(ownerID=str(current_identity.id)
+
     @classmethod
-    def find_by_name(cls, name):
-        return cls.query.filter_by(name=name).first()
-    @classmethod
-    def find_by_surah_number(cls, surah, number):
-        return cls.query.filter_by(surah=surah, number=number).first()
+    def find_by_surah_number(cls, ownerID, surah, number):
+        # return cls.query.filter_by(surah=surah, number=number).first()
+        ayat_list = cls.query.filter_by(ownerID=ownerID)
+        for ayat in ayat_list:
+            if difflib.SequenceMatcher(None, ayat.surah, surah).ratio() > 0.5 and ayat.number == number:
+                return ayat
+        return None
 
 
     @classmethod
     def surah_exist(cls, surah):
         from common.quran_data import surah_list
-        print(surah_list)
-        return surah in surah_list
+
+        # return surah in surah_list
+        similar_surah_name = difflib.get_close_matches(surah, surah_list)
+        surah_name_found = similar_surah_name[0]
+
+        print('Ratio: '+ str(difflib.SequenceMatcher(None, surah_name_found, surah).ratio()) )
+        print("Surah: {} Surah_found: {}".format(surah, surah_name_found) )
+        return (difflib.SequenceMatcher(None, surah_name_found, surah).ratio() > 0.5)
+
+    @classmethod
+    def ayat_in_range(cls, surah, ayat_number):
+        from common.quran_data import filtered_surah_data, surah_list
+
+
+        ayat_number = int(ayat_number)
+        similar_surah_name = difflib.get_close_matches(surah, surah_list)
+        surah_name_found = similar_surah_name[0]
+
+        surahs_total_ayat = None
+        for surah_info_dict in filtered_surah_data:
+            if surah_info_dict.get('englishName') == surah_name_found:
+                print("Surah found, number of ayat {}".format(surah_info_dict.get('numberOfAyahs')))
+                surahs_total_ayat = surah_info_dict.get('numberOfAyahs')
+        if surahs_total_ayat:
+            return ayat_number <= surahs_total_ayat
+        else:
+            print("Surah name {} unfound!".format(surah))
+            return False
+
+
+
 
     def save_to_db(self):
         db.session.add(self)
