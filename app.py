@@ -6,8 +6,7 @@ from security import authenticate, identity
 from resources.user import UserRegister
 from resources.item import Item, ItemList
 from resources.store import Store
-from resources.ayat import Ayat
-from resources.ayat import AyatGroup
+from resources.ayat import Ayat, AyatGroup, Surah
 from resources.bot import Bot
 from common.quran_data import populate_surah_data
 
@@ -30,6 +29,7 @@ jwt = JWT(app, authenticate, identity)  # /auth
 
 api.add_resource(Ayat, '/ayat')
 api.add_resource(AyatGroup, '/ayats')
+api.add_resource(Surah, '/surah')
 api.add_resource(UserRegister, '/register')
 
 if __name__ == '__main__':

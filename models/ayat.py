@@ -71,7 +71,6 @@ class AyatModel(db.Model):
     def ayat_in_range(cls, surah, ayat_number):
         from common.quran_data import filtered_surah_data, surah_list
 
-
         ayat_number = int(ayat_number)
         similar_surah_name = difflib.get_close_matches(surah, surah_list)
         surah_name_found = similar_surah_name[0]
@@ -83,6 +82,25 @@ class AyatModel(db.Model):
                 surahs_total_ayat = surah_info_dict.get('numberOfAyahs')
         if surahs_total_ayat:
             return ayat_number <= surahs_total_ayat
+        else:
+            print("Surah name {} unfound!".format(surah))
+            return False
+
+    @classmethod
+    def get_surah_ayat_count(cls, surah):
+        from common.quran_data import filtered_surah_data, surah_list
+
+
+        similar_surah_name = difflib.get_close_matches(surah, surah_list)
+        surah_name_found = similar_surah_name[0]
+
+        surahs_total_ayat = None
+        for surah_info_dict in filtered_surah_data:
+            if surah_info_dict.get('englishName') == surah_name_found:
+                print("Surah found, number of ayat {}".format(surah_info_dict.get('numberOfAyahs')))
+                surahs_total_ayat = surah_info_dict.get('numberOfAyahs')
+        if surahs_total_ayat:
+            return surahs_total_ayat
         else:
             print("Surah name {} unfound!".format(surah))
             return False
