@@ -42,41 +42,6 @@ class Ayat(Resource):
         help="This field is for you to specify ayat's difficulty, range 0-5, from easiest to hardest"
     )
 
-
-
-
-
-
-    # parser.add_argument('price',
-    #     type=float,
-    #     required=True,
-    #     help="This field cannot be left blank!"
-    # )
-
-    # parser.add_argument('price',
-    #     type=float,
-    #     required=True,
-    #     help="This field cannot be left blank!"
-    # )
-    # parser.add_argument('store_id',
-    #     type=int,
-    #     required=True,
-    #     help="Every item needs a store_id."
-    # )
-
-    # @jwt_required()
-    # def get(self):
-    #     data = Ayat.parser.parse_args()
-    #     if data.get('surah') and data.get('number'):
-    #
-    #     print("surah is {} and number is {}".format(data.get('surah'),data.get('number')))
-    #
-    #     ayat = AyatModel.find_by_surah_number(data.get('surah'), data.get('number'))
-    #
-    #     if ayat:
-    #         return ayat.json()
-    #     return {'message': 'Ayat not found'}, 404
-
     @jwt_required()
     def post(self):
         data = Ayat.parser.parse_args()
@@ -105,20 +70,6 @@ class Ayat(Resource):
 
         return ayat.json(), 201
 
-
-        # if ItemModel.find_by_name(name):
-        #     return {'message': "An item with name '{}' already exists.".format(name)}, 400
-
-        # data = Item.parser.parse_args()
-
-        # item = ItemModel(name, data['price'], data['store_id'])
-
-        # try:
-        #     item.save_to_db()
-        # except:
-        #     return {"message": "An error occurred inserting the item."}, 500
-
-        # return item.json(), 201
 
     def delete(self):
         data = Ayat.parser.parse_args()
@@ -155,10 +106,33 @@ class Ayat(Resource):
         return ayat.json(), 201
 
 
-class AyatGroup(Resource):
+class MemorizedAyats(Resource):
+    parser = reqparse.RequestParser()
+
+    parser.add_argument('surah',
+        type=str,
+        required=False,
+        help="Parameter to filter by surah"
+    )
+
+    parser.add_argument('juz',
+        type=str,
+        required=False,
+        help="Parameter to filter by juz"
+    )
+
+
+
     @jwt_required()
     def get(self):
+        data = MemorizedAyats.parser.parse_args()
+
+        if data.get('surah'):
+            return {'ayats': list(map(lambda x: x.json(), AyatModel.query.filter_by(ownerID=str(current_identity.id), surah=data.get('surah') )))  }, 200
+
         return {'ayats': list(map(lambda x: x.json(), AyatModel.query.filter_by(ownerID=str(current_identity.id)  )))  }, 200
+
+
 
 class Surah(Resource):
     parser = reqparse.RequestParser()
@@ -210,7 +184,7 @@ class Surah(Resource):
         data = Surah.parser.parse_args()
         surahs_list = list()
         surahs_total_ayat_count = 0
-        print('posted')
+
         if data.get('surah'):
             surah_data = data.get('surah')
             if isinstance(surah_data, list):
