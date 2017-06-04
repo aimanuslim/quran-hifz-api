@@ -2,6 +2,7 @@ from flask_restful import Resource, reqparse
 from flask_jwt import JWT, jwt_required, current_identity
 from models.hifz import HifzModel
 from common.utilities import isSurahValid, AyatIsInRange, FindAyatCountIn, FindJuzGivenSurahAndAyat, FindSurahWithAyatInJuz
+import json
 
 
 class Hifz(Resource):
@@ -13,10 +14,11 @@ class Hifz(Resource):
     )
 
     parser.add_argument('ayatnumber',
-        type=int,
+        # type=int,
         required=False,
         help="the number of the ayat within the surah"
     )
+
 
     parser.add_argument('juz',
         type=int,
@@ -51,16 +53,27 @@ class Hifz(Resource):
         data = Hifz.parser.parse_args()
         surahnumber = data.get('surah')
         ayatnumber = data.get('ayatnumber')
+        ayatnumber = ayatnumber.replace("\'","\"") # to satisfy json loads requirement, need to replace single quotes with double quotes
+        ayatnumber = json.loads(ayatnumber)
+
         juz = data.get('juz')
 
         if surahnumber and ayatnumber:
+            print("Ayat number parameter: {} {}".format(ayatnumber, type(ayatnumber)))
             if HifzModel.AlreadyExist(str(current_identity.id), surahnumber, ayatnumber):
                 return {'message': "This ayat is already in database."}, 400
             if not isSurahValid(surahnumber):
                 return {'message': "Surah is not valid"}, 400
+            if  isinstance(ayatnumber, dict):
+                if not ayatnumber['start'] or not ayatnumber['end']:
+                    return {'message': "Invalid ayat limits format"}, 400
+                else:
+                    if not AyatIsInRange(surahnumber, ayatnumber['start']) or not AyatIsInRange(surahnumber, ayatnumber['end']):
+                        return {'message': "Either limit is out of range"}, 400
             if  not AyatIsInRange(surahnumber, ayatnumber):
                 return {'message': "Ayat is out of range"}, 400
 
+            # TODO: need to loop over range
             juz = FindJuzGivenSurahAndAyat(surahnumber, ayatnumber)
             hifz = HifzModel(str(current_identity.id),
                 surahnumber,
