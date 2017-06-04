@@ -128,31 +128,26 @@ class Hifz(Resource):
     def put(self):
         pass
 
+
 class MemorizedAyats(Resource):
-    parser = reqparse.RequestParser()
-
-    parser.add_argument('surah',
-        type=str,
-        required=False,
-        help="Parameter to filter by surah"
-    )
-
-    parser.add_argument('juz',
-        type=str,
-        required=False,
-        help="Parameter to filter by juz"
-    )
-
-
-
     @jwt_required()
     def get(self):
-        data = MemorizedAyats.parser.parse_args()
-
-        if data.get('surah'):
-            return {'ayats': list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), surah=data.get('surah') )))  }, 200
-
-        if data.get('juz'):
-                return {'ayats': list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), juz=data.get('juz') )))  }, 200
-
         return {'ayats': list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id)  )))  }, 200
+
+class MemorizedAyatsFiltered(MemorizedAyats):
+    @jwt_required()
+    def get(self, mode, number):
+        print("Mode {}".format(mode))
+        print("number {}".format(number))
+
+        if not number.isdigit():
+            return {'message': "Need to provide {} number".format(mode)}, 400
+
+        if mode == 'surah':
+
+            return {'ayats': list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), surah=number )))  }, 200
+
+        if mode == 'juz':
+            return {'ayats': list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), juz=number )))  }, 200
+
+        return {'message': "Invalid url format"}, 400

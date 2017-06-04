@@ -88,11 +88,12 @@ def FindAyatCountIn(surahnumber):
     #     return False
 
 def FindJuzGivenSurahAndAyat(surah, ayat):
-    url = 'http://api.alquran.cloud/ayat/' + str(surah) + ":" + str(ayat)
+    url = 'http://api.alquran.cloud/ayah/' + str(surah) + ":" + str(ayat)
     r = requests.get(url)
     if r:
         data = json.loads(r.text)
         return data.get('data').get('juz')
+    print("Juz not found")
     return None
 
 def FindSurahWithAyatInJuz(juz):
