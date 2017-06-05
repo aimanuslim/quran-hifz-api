@@ -88,7 +88,7 @@ class Ayat(Resource):
             ayat.surah = data.get('surah')
             ayat.number = data.get('number')
             ayat.last_refreshed = data.get('date_refreshed')
-            ayat.hifz_strength = data.get('hifz_strength')
+            ayat.difficulty = data.get('difficulty')
             ayat.theme = data.get('theme')
             ayat.note  = data.get('note')
         else:

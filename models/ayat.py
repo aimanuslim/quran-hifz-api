@@ -11,7 +11,7 @@ class AyatModel(db.Model):
     number = db.Column(db.Integer)
     revisit_frequency = db.Column(db.Integer)
     last_refreshed = db.Column(db.DateTime)
-    hifz_strength = db.Column(db.Integer)
+    difficulty = db.Column(db.Integer)
     note = db.Column(db.Text)
     theme = db.Column(db.Text)
     ownerID = db.Column(db.Integer)
@@ -24,7 +24,7 @@ class AyatModel(db.Model):
     # store_id = db.Column(db.Integer, db.ForeignKey('stores.id'))
     # store = db.relationship('StoreModel')
 
-    def __init__(self, ownerID, surah, number, date_refreshed, hifz_strength, theme, note):
+    def __init__(self, ownerID, surah, number, date_refreshed, difficulty, theme, note):
         self.ownerID = ownerID
         self.surah = surah
         self.number = number
@@ -32,13 +32,13 @@ class AyatModel(db.Model):
 
         self.revisit_frequency = 0
         self.last_refreshed = date_refreshed
-        self.hifz_strength = hifz_strength
+        self.difficulty = difficulty
         self.theme = theme
         self.note = note
 
 
     def json(self):
-        return {'owner': self.ownerID, 'surah': self.surah, 'juz': self.juz, 'number': self.number, 'revisit_frequency': self.revisit_frequency, 'last_refreshed': self.last_refreshed, 'hifz_strength': self.hifz_strength, 'theme': self.theme, 'note': self.note}
+        return {'owner': self.ownerID, 'surah': self.surah, 'juz': self.juz, 'number': self.number, 'revisit_frequency': self.revisit_frequency, 'last_refreshed': self.last_refreshed, 'difficulty': self.difficulty, 'theme': self.theme, 'note': self.note}
 
     # @classmethod
     # def find_by_name(cls, ownerID, name):

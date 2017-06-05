@@ -79,7 +79,7 @@ class Hifz(Resource):
                         juz,
                         an,
                         data.get('date_refreshed'),
-                        data.get('hifz_strength'),
+                        data.get('difficulty'),
                         data.get('theme'),
                         data.get('note')
                     )
@@ -87,30 +87,28 @@ class Hifz(Resource):
                         hifz.save_to_db()
                         saved_array.append(hifz.json());
                     except:
-                        return {"message": "An error occurred inserting the data."}, 500        
+                        return {"message": "An error occurred inserting the data."}, 500
                     return {'ayats': saved_array};
             else:
                 if AyatIsInRange(surahnumber, ayatnumber):
                     return {'message': "Ayat is out of range"}, 400
 
-            # TODO: need to loop over range
-            
-            juz = FindJuzGivenSurahAndAyat(surahnumber, ayatnumber)
-            hifz = HifzModel(str(current_identity.id),
-                surahnumber,
-                juz,
-                ayatnumber,
-                data.get('date_refreshed'),
-                data.get('hifz_strength'),
-                data.get('theme'),
-                data.get('note')
-            )
-            try:
-                hifz.save_to_db()
-            except:
-                return {"message": "An error occurred inserting the data."}, 500
+                juz = FindJuzGivenSurahAndAyat(surahnumber, ayatnumber)
+                hifz = HifzModel(str(current_identity.id),
+                    surahnumber,
+                    juz,
+                    ayatnumber,
+                    data.get('date_refreshed'),
+                    data.get('difficulty'),
+                    data.get('theme'),
+                    data.get('note')
+                )
+                try:
+                    hifz.save_to_db()
+                except:
+                    return {"message": "An error occurred inserting the data."}, 500
 
-            return hifz.json(), 201
+                return hifz.json(), 201
 
 
         if surahnumber and not ayatnumber:
@@ -126,7 +124,7 @@ class Hifz(Resource):
                     juz,
                     ayatnumber,
                     data.get('date_refreshed'),
-                    data.get('hifz_strength'),
+                    data.get('difficulty'),
                     data.get('theme'),
                     data.get('note')
                 )
@@ -146,7 +144,7 @@ class Hifz(Resource):
                         juz,
                         ayatnumber,
                         data.get('date_refreshed'),
-                        data.get('hifz_strength'),
+                        data.get('difficulty'),
                         data.get('theme'),
                         data.get('note')
                     )

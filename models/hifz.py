@@ -11,25 +11,27 @@ class HifzModel(db.Model):
     ayatnumber = db.Column(db.Integer)
     revisit_frequency = db.Column(db.Integer)
     last_refreshed = db.Column(db.DateTime)
-    hifz_strength = db.Column(db.Integer)
+    difficulty = db.Column(db.Integer)
     note = db.Column(db.Text)
     theme = db.Column(db.Text)
     ownerID = db.Column(db.Integer)
+    group = db.Column(db.Integer)
 
-    def __init__(self, ownerID, surah, juz, ayatnumber, date_refreshed, hifz_strength, theme, note):
+    def __init__(self, ownerID, surah, juz, ayatnumber, date_refreshed, difficulty, theme, note, group):
         self.ownerID = ownerID
         self.surah = surah
         self.ayatnumber = ayatnumber
         self.juz = juz
         self.revisit_frequency = 0
         self.last_refreshed = date_refreshed
-        self.hifz_strength = hifz_strength
+        self.difficulty = difficulty
         self.theme = theme
         self.note = note
+        self.group = group
 
 
     def json(self):
-        return {'owner': self.ownerID, 'surah': self.surah, 'juz': self.juz, 'number': self.ayatnumber, 'revisit_frequency': self.revisit_frequency, 'last_refreshed': self.last_refreshed, 'hifz_strength': self.hifz_strength, 'theme': self.theme, 'note': self.note}
+        return {'owner': self.ownerID, 'surah': self.surah, 'juz': self.juz, 'number': self.ayatnumber, 'revisit_frequency': self.revisit_frequency, 'last_refreshed': self.last_refreshed, 'difficulty': self.difficulty, 'theme': self.theme, 'note': self.note, 'group': self.group}
 
     @classmethod
     def AlreadyExist(cls, ownerID, surah, number):
