@@ -48,6 +48,7 @@ class Hifz(Resource):
         help="This field is for you to specify ayat's difficulty, range 0-5, from easiest to hardest"
     )
 
+
     @jwt_required()
     def post(self):
         data = Hifz.parser.parse_args()
@@ -70,10 +71,30 @@ class Hifz(Resource):
                 else:
                     if not AyatIsInRange(surahnumber, ayatnumber['start']) or not AyatIsInRange(surahnumber, ayatnumber['end']):
                         return {'message': "Either limit is out of range"}, 400
-            if  not AyatIsInRange(surahnumber, ayatnumber):
-                return {'message': "Ayat is out of range"}, 400
+                saved_array = []
+                for an in range(ayatnumber['start'], ayatnumber['end'] + 1):
+                    juz = FindJuzGivenSurahAndAyat(surahnumber, an)
+                    hifz = HifzModel(str(current_identity.id),
+                        surahnumber,
+                        juz,
+                        an,
+                        data.get('date_refreshed'),
+                        data.get('hifz_strength'),
+                        data.get('theme'),
+                        data.get('note')
+                    )
+                    try:
+                        hifz.save_to_db()
+                        saved_array.append(hifz.json());
+                    except:
+                        return {"message": "An error occurred inserting the data."}, 500        
+                    return {'ayats': saved_array};
+            else:
+                if AyatIsInRange(surahnumber, ayatnumber):
+                    return {'message': "Ayat is out of range"}, 400
 
             # TODO: need to loop over range
+            
             juz = FindJuzGivenSurahAndAyat(surahnumber, ayatnumber)
             hifz = HifzModel(str(current_identity.id),
                 surahnumber,
@@ -90,6 +111,8 @@ class Hifz(Resource):
                 return {"message": "An error occurred inserting the data."}, 500
 
             return hifz.json(), 201
+
+
         if surahnumber and not ayatnumber:
             if not isSurahValid(surahnumber):
                 return {'message': "Surah is not valid"}, 400
