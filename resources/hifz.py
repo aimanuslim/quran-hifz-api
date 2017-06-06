@@ -1,7 +1,7 @@
 from flask_restful import Resource, reqparse
 from flask_jwt import JWT, jwt_required, current_identity
 from models.hifz import HifzModel
-from common.utilities import isSurahValid, AyatIsInRange, FindAyatCountIn, FindJuzGivenSurahAndAyat, FindSurahWithAyatInJuz
+from common.utilities import isSurahValid, AyatIsInRange, FindAyatCountIn, FindJuzGivenSurahAndAyat, FindSurahWithAyatInJuz, JuzInRange
 import json
 
 
@@ -46,6 +46,18 @@ class Hifz(Resource):
         type=int,
         required=False,
         help="This field is for you to specify ayat's difficulty, range 0-5, from easiest to hardest"
+    )
+
+    parser.add_argument('group',
+        type=int,
+        required=False,
+        help="This field is for you to specify ayat's group, if you need to chain it with some other similar ayats"
+    )
+
+    parser.add_argument('just_revisited', 
+        type=true,
+        required=False,
+        help="This field is to indicate that this ayat was just revisited recently (within one day)"
     )
 
 
@@ -117,6 +129,7 @@ class Hifz(Resource):
 
             ayatct = FindAyatCountIn(surahnumber)
             print("Ayat count: {}".format(ayatct))
+            saved_array = []
             for ayatnumber in range(1, ayatct + 1):
                 juz = FindJuzGivenSurahAndAyat(surahnumber, ayatnumber)
                 hifz = HifzModel(str(current_identity.id),
@@ -130,13 +143,19 @@ class Hifz(Resource):
                 )
                 try:
                     hifz.save_to_db()
+                    saved_array.append(hifz.json())
                 except:
                     return {"message": "An error occurred inserting the data."}, 500
-            return {'surah': surahnumber, 'total_ayat': ayatct}, 201
+            return {'surah': surahnumber, 'ayats': saved_array}, 201
 
         if juz and not surahnumber and not ayatnumber:
+            
+            if not JuzInRange(juz):
+                return {"message", "Juz is not valid"}, 400
+
             # a list of tuples where each tuple will contain a surah number and its last ayat that is contained within that juz
             limits_dict = FindSurahWithAyatInJuz(juz)
+            saved_array = []
             for (sn,limits) in limits_dict.items():
                 for ayatnumber in range(limits[0], limits[1] + 1):
                     hifz = HifzModel(str(current_identity.id),
@@ -150,10 +169,11 @@ class Hifz(Resource):
                     )
                     try:
                         hifz.save_to_db()
+                        saved_array.append(hifz.json())
                     except:
                         return {"message": "An error occurred inserting the data."}, 500
             # TODO: change the return values later
-            return {'juz': juz}, 201
+            return {'juz': juz, 'ayats': saved_array}, 201
         return {'Some parameters are missing!'}, 400
 
     def delete(self):
