@@ -34,9 +34,9 @@ class HifzModel(db.Model):
         return {'owner': self.ownerID, 'surah': self.surah, 'juz': self.juz, 'number': self.ayatnumber, 'revisit_frequency': self.revisit_frequency, 'last_refreshed': self.last_refreshed, 'difficulty': self.difficulty, 'theme': self.theme, 'note': self.note, 'group': self.group}
 
     @classmethod
-    def AlreadyExist(cls, ownerID, surah, number):
+    def FindHifzBySurahAndNumber(cls, ownerID, surah, number):
         ayat_exist = cls.query.filter_by(ownerID=ownerID, surah=surah, ayatnumber=number)
-        return None
+        return ayat_exist
 
 
     def save_to_db(self):

@@ -54,7 +54,7 @@ class Hifz(Resource):
         help="This field is for you to specify ayat's group, if you need to chain it with some other similar ayats"
     )
 
-    parser.add_argument('just_revisited', 
+    parser.add_argument('just_revisited',
         type=true,
         required=False,
         help="This field is to indicate that this ayat was just revisited recently (within one day)"
@@ -73,8 +73,7 @@ class Hifz(Resource):
 
         if surahnumber and ayatnumber:
             print("Ayat number parameter: {} {}".format(ayatnumber, type(ayatnumber)))
-            if HifzModel.AlreadyExist(str(current_identity.id), surahnumber, ayatnumber):
-                return {'message': "This ayat is already in database."}, 400
+
             if not isSurahValid(surahnumber):
                 return {'message': "Surah is not valid"}, 400
             if  isinstance(ayatnumber, dict):
@@ -102,6 +101,8 @@ class Hifz(Resource):
                         return {"message": "An error occurred inserting the data."}, 500
                     return {'ayats': saved_array};
             else:
+                if HifzModel.FindAyatBySurahAndNumber(str(current_identity.id), surahnumber, ayatnumber):
+                    return {'message': "This ayat is already in database."}, 400
                 if AyatIsInRange(surahnumber, ayatnumber):
                     return {'message': "Ayat is out of range"}, 400
 
@@ -149,7 +150,7 @@ class Hifz(Resource):
             return {'surah': surahnumber, 'ayats': saved_array}, 201
 
         if juz and not surahnumber and not ayatnumber:
-            
+
             if not JuzInRange(juz):
                 return {"message", "Juz is not valid"}, 400
 
@@ -177,7 +178,109 @@ class Hifz(Resource):
         return {'Some parameters are missing!'}, 400
 
     def delete(self):
-        pass
+        data = Hifz.parser.parse_args()
+        surahnumber = data.get('surah')
+        ayatnumber = data.get('ayatnumber')
+        ayatnumber = ayatnumber.replace("\'","\"") # to satisfy json loads requirement, need to replace single quotes with double quotes
+        ayatnumber = json.loads(ayatnumber)
+
+        juz = data.get('juz')
+
+        if surahnumber and ayatnumber:
+            print("Ayat number parameter: {} {}".format(ayatnumber, type(ayatnumber)))
+
+            if not isSurahValid(surahnumber):
+                return {'message': "Surah is not valid"}, 400
+            if  isinstance(ayatnumber, dict):
+                if not ayatnumber['start'] or not ayatnumber['end']:
+                    return {'message': "Invalid ayat limits format"}, 400
+                else:
+                    if not AyatIsInRange(surahnumber, ayatnumber['start']) or not AyatIsInRange(surahnumber, ayatnumber['end']):
+                        return {'message': "Either limit is out of range"}, 400
+                saved_array = []
+                for an in range(ayatnumber['start'], ayatnumber['end'] + 1):
+
+                    try:
+                        hifz.save_to_db()
+                        saved_array.append(hifz.json());
+                    except:
+                        return {"message": "An error occurred inserting the data."}, 500
+                    return {'ayats': saved_array};
+            else:
+                if HifzModel.FindAyatBySurahAndNumber(str(current_identity.id), surahnumber, ayatnumber):
+                    return {'message': "This ayat is already in database."}, 400
+                if AyatIsInRange(surahnumber, ayatnumber):
+                    return {'message': "Ayat is out of range"}, 400
+
+                juz = FindJuzGivenSurahAndAyat(surahnumber, ayatnumber)
+                hifz = HifzModel(str(current_identity.id),
+                    surahnumber,
+                    juz,
+                    ayatnumber,
+                    data.get('date_refreshed'),
+                    data.get('difficulty'),
+                    data.get('theme'),
+                    data.get('note')
+                )
+                try:
+                    hifz.save_to_db()
+                except:
+                    return {"message": "An error occurred inserting the data."}, 500
+
+                return hifz.json(), 201
+
+
+        if surahnumber and not ayatnumber:
+            if not isSurahValid(surahnumber):
+                return {'message': "Surah is not valid"}, 400
+
+            ayatct = FindAyatCountIn(surahnumber)
+            print("Ayat count: {}".format(ayatct))
+            saved_array = []
+            for ayatnumber in range(1, ayatct + 1):
+                juz = FindJuzGivenSurahAndAyat(surahnumber, ayatnumber)
+                hifz = HifzModel(str(current_identity.id),
+                    surahnumber,
+                    juz,
+                    ayatnumber,
+                    data.get('date_refreshed'),
+                    data.get('difficulty'),
+                    data.get('theme'),
+                    data.get('note')
+                )
+                try:
+                    hifz.save_to_db()
+                    saved_array.append(hifz.json())
+                except:
+                    return {"message": "An error occurred inserting the data."}, 500
+            return {'surah': surahnumber, 'ayats': saved_array}, 201
+
+        if juz and not surahnumber and not ayatnumber:
+
+            if not JuzInRange(juz):
+                return {"message", "Juz is not valid"}, 400
+
+            # a list of tuples where each tuple will contain a surah number and its last ayat that is contained within that juz
+            limits_dict = FindSurahWithAyatInJuz(juz)
+            saved_array = []
+            for (sn,limits) in limits_dict.items():
+                for ayatnumber in range(limits[0], limits[1] + 1):
+                    hifz = HifzModel(str(current_identity.id),
+                        sn,
+                        juz,
+                        ayatnumber,
+                        data.get('date_refreshed'),
+                        data.get('difficulty'),
+                        data.get('theme'),
+                        data.get('note')
+                    )
+                    try:
+                        hifz.save_to_db()
+                        saved_array.append(hifz.json())
+                    except:
+                        return {"message": "An error occurred inserting the data."}, 500
+            # TODO: change the return values later
+            return {'juz': juz, 'ayats': saved_array}, 201
 
     def put(self):
         pass
