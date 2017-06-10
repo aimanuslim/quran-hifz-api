@@ -5,7 +5,7 @@ from flask_jwt import JWT
 from security import authenticate, identity
 from resources.user import UserRegister
 from resources.hifz import Hifz, MemorizedAyats, MemorizedAyatsFiltered
-from common.utilities import PopulateSurahData
+from common.utilities import PopulateSurahData, PopulateJuzData
 
 
 app = Flask(__name__)
@@ -21,6 +21,7 @@ def create_tables():
 @app.before_first_request
 def intialize_quran_data():
     PopulateSurahData()
+    PopulateJuzData()
 
 
 jwt = JWT(app, authenticate, identity)  # /auth

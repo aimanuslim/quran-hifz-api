@@ -4,6 +4,7 @@ import json
 
 ayatcts_in_surah = dict()
 surah_names = dict()
+surah_limits_in_all_juz = None
 
 surah_list = []
 
@@ -35,69 +36,45 @@ def PopulateSurahData():
         # dict((k, surah_data[k]) for k in keys if k in surah_data)
 
 def PopulateJuzData():
-    for juz_number in range(1, 31):
-        url = 'http://api.alquran.cloud/juz/' + str(juz_number)
-        r = requests.get(url)
-        if r:
-            data = json.loads(r.text)
+    with open('common/juzs.json', encoding="utf8") as data_file:
+        data = json.load(data_file)
+        global surah_limits_in_all_juz
+        surah_limits_in_all_juz = data.get('data')
+
 
 def isSurahValid(surah):
     return surah < 115 or surah > 0
-    # # return surah in surah_list
-    # similar_surah_name = difflib.get_close_matches(surah, surah_list)
-    # surah_name_found = similar_surah_name[0]
-    #
-    # print('Ratio: '+ str(difflib.SequenceMatcher(None, surah_name_found, surah).ratio()) )
-    # print("Surah: {} Surah_found: {}".format(surah, surah_name_found) )
-    # return (difflib.SequenceMatcher(None, surah_name_found, surah).ratio() > 0.5)
+    
 
 def AyatIsInRange(surahnumber, ayat_number):
     ayat_number = int(ayat_number)
+    print("max: {} an: {}".format(ayatcts_in_surah[surahnumber], ayat_number))
     if ayat_number < 0 or ayat_number > ayatcts_in_surah[surahnumber]:
         return False
     return True
-    # similar_surah_name = difflib.get_close_matches(surah, surah_list)
-    # surah_name_found = similar_surah_name[0]
-    #
-    # surahs_total_ayat = None
-    # for surah_info_dict in ayatcts_in_surah:
-    #     if surah_info_dict.get('englishName') == surah_name_found:
-    #         print("Surah found, number of ayat {}".format(surah_info_dict.get('numberOfAyahs')))
-    #         surahs_total_ayat = surah_info_dict.get('numberOfAyahs')
-    # if surahs_total_ayat:
-    #     return ayat_number <= surahs_total_ayat
-    # else:
-    #     print("Surah name {} unfound!".format(surah))
-    #     return False
+    
 
 def FindAyatCountIn(surahnumber):
     return ayatcts_in_surah[surahnumber]
-    #
-    # similar_surah_name = difflib.get_close_matches(surah, surah_list)
-    # surah_name_found = similar_surah_name[0]
-    #
-    # surahs_total_ayat = None
-    # for surah_info_dict in ayatcts_in_surah:
-    #     if surah_info_dict.get('englishName') == surah_name_found:
-    #         print("Surah found, number of ayat {}".format(surah_info_dict.get('numberOfAyahs')))
-    #         surahs_total_ayat = surah_info_dict.get('numberOfAyahs')
-    # if surahs_total_ayat:
-    #     return surahs_total_ayat
-    # else:
-    #     print("Surah name {} unfound!".format(surah))
-    #     return False
+    
+
+def FindJuzGivenSurahAndAyat(surah, ayat):
+    global surah_limits_in_all_juz
+    if surah_limits_in_all_juz:
+        for juz_number, juz_limits in enumerate(surah_limits_in_all_juz):
+            
+            for sn, an_limits in juz_limits.items():
+                # print("AN limits: {} SN: {} surah: {} ayat {}".format(an_limits, sn, surah, ayat))
+                if int(sn) == surah and ayat >= an_limits[0] and ayat <= an_limits[1]:
+                    return juz_number + 1
+    return -1
+
+
 
 def JuzInRange(juz):
     return (juz > 0 and juz <= 30)
 
-def FindJuzGivenSurahAndAyat(surah, ayat):
-    url = 'http://api.alquran.cloud/ayah/' + str(surah) + ":" + str(ayat)
-    r = requests.get(url)
-    if r:
-        data = json.loads(r.text)
-        return data.get('data').get('juz')
-    print("Juz not found")
-    return None
+
 
 def FindSurahWithAyatInJuz(juz):
     url = 'http://api.alquran.cloud/juz/' + str(juz)

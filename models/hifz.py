@@ -1,6 +1,9 @@
 from db import db
 import difflib
 import pdb
+import requests
+import json
+from common.utilities import FindJuzGivenSurahAndAyat
 
 class HifzModel(db.Model):
     __tablename__ = 'hifz'
@@ -17,17 +20,13 @@ class HifzModel(db.Model):
     ownerID = db.Column(db.Integer)
     group = db.Column(db.Integer)
 
-    def __init__(self, ownerID, surah, juz, ayatnumber, date_refreshed, difficulty, theme, note, group):
+    def __init__(self, ownerID, surah, ayatnumber):
         self.ownerID = ownerID
         self.surah = surah
         self.ayatnumber = ayatnumber
-        self.juz = juz
+        self.juz = FindJuzGivenSurahAndAyat(surah, ayatnumber)
         self.revisit_frequency = 0
-        self.last_refreshed = date_refreshed
-        self.difficulty = difficulty
-        self.theme = theme
-        self.note = note
-        self.group = group
+     
 
 
     def json(self):
@@ -35,8 +34,10 @@ class HifzModel(db.Model):
 
     @classmethod
     def FindHifzBySurahAndNumber(cls, ownerID, surah, number):
-        ayat_exist = cls.query.filter_by(ownerID=ownerID, surah=surah, ayatnumber=number)
+        ayat_exist = cls.query.filter_by(ownerID=ownerID, surah=surah, ayatnumber=number).first()
         return ayat_exist
+
+    
 
 
     def save_to_db(self):
