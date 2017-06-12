@@ -99,7 +99,7 @@ class Hifz(Resource):
                         saved_array.append(hifz.json());
                     except:
                         return {"message": "An error occurred inserting the data."}, 500
-                return {'ayats': saved_array};
+                return {'ayats': saved_array}, 201;
             else:
                 # sanity checking
                 if HifzModel.FindHifzBySurahAndNumber(str(current_identity.id), surahnumber, ayatnumber):return {'message': "This ayat is already in database."}, 400
@@ -178,14 +178,14 @@ class Hifz(Resource):
                 saved_array = []
                 for an in range(ayatnumber['start'], ayatnumber['end'] + 1):
                     hifz = HifzModel.FindHifzBySurahAndNumber(str(current_identity.id), surahnumber, an);
-                    if not hifz: next
+                    if not hifz: continue
                     try:
                         hifz.delete_from_db();
                     except:
                         return {"message": "An error occurred deleting the data."}, 500
-                    return {}, 201;
+                return {}, 200; 
             else:
-                if AyatIsInRange(surahnumber, ayatnumber):
+                if not AyatIsInRange(surahnumber, ayatnumber):
                     return {'message': "Ayat is out of range"}, 400
 
                 hifz = HifzModel.FindHifzBySurahAndNumber(str(current_identity.id), surahnumber, ayatnumber)
@@ -194,7 +194,7 @@ class Hifz(Resource):
                     hifz.delete_from_db()
                 except:
                     return {"message": "An error occurred deleting the data."}, 500
-                return {}, 201 # success
+                return {}, 200 # success
                 
 
 
@@ -204,15 +204,14 @@ class Hifz(Resource):
                 return {'message': "Surah is not valid"}, 400
 
             ayatct = FindAyatCountIn(surahnumber)
-            saved_array = []
             for an in range(1, ayatct + 1):
                 hifz = HifzModel.FindHifzBySurahAndNumber(str(current_identity.id), surahnumber, an)
-                if not hifz: next 
+                if not hifz: continue 
                 try:
                     hifz.delete_from_db()
                 except:
                     return {"message": "An error occurred deleting the data."}, 500
-            return {}, 201
+            return {}, 200
 
         if juz and not surahnumber and not ayatnumber:
             if not JuzInRange(juz):
@@ -220,15 +219,17 @@ class Hifz(Resource):
 
             # a list of tuples where each tuple will contain a surah number and its last ayat that is contained within that juz
             limits_dict = FindSurahWithAyatInJuz(juz)
+            print(limits_dict)
             for (sn,limits) in limits_dict.items():
                 for an in range(limits[0], limits[1] + 1):
                     hifz = HifzModel.FindHifzBySurahAndNumber(str(current_identity.id), sn, an)
-                    if not hifz: next
+                    if not hifz: continue
                     try:
+                        print("deleting")
                         hifz.delete_from_db()
                     except:
                         return {"message": "An error occurred deleting the data."}, 500
-                    return {}, 201
+            return {}, 200
         return {'Some parameters are missing!'}, 400
 
 
@@ -283,7 +284,7 @@ class Hifz(Resource):
                 except:
                     return {"message": "An error occurred updating the data."}, 500
 
-                return hifz.json(), 201
+                return hifz.json(), 200
 
 
         if surahnumber and not ayatnumber:
@@ -301,7 +302,7 @@ class Hifz(Resource):
                     saved_array.append(hifz.json())
                 except:
                     return {"message": "An error occurred updating the data."}, 500
-            return {'surah': surahnumber, 'ayats': saved_array}, 201
+            return {'surah': surahnumber, 'ayats': saved_array}, 200
 
         if juz and not surahnumber and not ayatnumber:
             if not JuzInRange(juz):
@@ -320,7 +321,7 @@ class Hifz(Resource):
                         saved_array.append(hifz.json())
                     except:
                         return {"message": "An error occurred inserting the data."}, 500
-            return {'juz': juz, 'ayats': saved_array}, 201
+            return {'juz': juz, 'ayats': saved_array}, 200
         return {'Some parameters are missing!'}, 400
 
 
