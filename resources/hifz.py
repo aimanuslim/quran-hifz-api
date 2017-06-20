@@ -16,6 +16,7 @@ class Hifz(Resource):
     parser.add_argument('ayatnumber',
         # type=int,
         required=False,
+        action='append',
         help="the number of the ayat within the surah"
     )
 
@@ -24,6 +25,18 @@ class Hifz(Resource):
         type=int,
         required=False,
         help="the juz number"
+    )
+
+    parser.add_argument('start',
+        type=int,
+        required=False,
+        help="the starting range of ayat"
+    )
+
+    parser.add_argument('end',
+        type=int,
+        required=False,
+        help="the ending range of ayat"
     )
 
     parser.add_argument('theme',
@@ -328,25 +341,35 @@ class Hifz(Resource):
 class MemorizedAyats(Resource):
     @jwt_required()
     def get(self):
+        data = Hifz.parser.parse_args()
+        surah = data.get('surah')
+        juz = data.get('juz')
+        ayat = data.get('ayatnumber')
+        start = data.get('start')
+        end = data.get('end')
+
+        print('Ayat is {}'.format(ayat))
+
+        if surah and start and end and not ayat:
+            return {'ayats': list(map(lambda x: x.json(), HifzModel.FindByRange(str(current_identity.id), surah, start, end)
+                ))  }, 200
+
+        if surah and ayat:
+            print("returning filtered by ayat")
+            return {'ayats': list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), surah=surah, ayatnumber=ayat)))  }, 200
+
+        if surah and not ayat:
+            print("returning filtered by surah")
+            return {'ayats': list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), surah=surah )))  }, 200
+
+        if juz:
+            print("returning filtered by juz")
+            return {'ayats': list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), juz=juz )))  }, 200
+
+
         return {'ayats': list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id)  )))  }, 200
 
-class MemorizedAyatsFiltered(MemorizedAyats):
-    @jwt_required()
-    def get(self, mode, number):
-        print("Mode {}".format(mode))
-        print("number {}".format(number))
 
-        if not number.isdigit():
-            return {'message': "Need to provide {} number".format(mode)}, 400
-
-        if mode == 'surah':
-
-            return {'ayats': list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), surah=number )))  }, 200
-
-        if mode == 'juz':
-            return {'ayats': list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), juz=number )))  }, 200
-
-        return {'message': "Invalid url format"}, 400
 
 
 def modify_properties(hifz, data):

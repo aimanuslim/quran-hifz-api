@@ -30,14 +30,19 @@ class HifzModel(db.Model):
 
 
     def json(self):
-        return {'owner': self.ownerID, 'surah': self.surah, 'juz': self.juz, 'number': self.ayatnumber, 'revisit_frequency': self.revisit_frequency, 'last_refreshed': self.last_refreshed, 'difficulty': self.difficulty, 'theme': self.theme, 'note': self.note, 'group': self.group}
+        return {'owner': self.ownerID, 'surah': self.surah, 'juz': self.juz, 'ayat number': self.ayatnumber, 'revisit_frequency': self.revisit_frequency, 'last_refreshed': self.last_refreshed, 'difficulty': self.difficulty, 'theme': self.theme, 'note': self.note, 'group': self.group}
 
     @classmethod
     def FindHifzBySurahAndNumber(cls, ownerID, surah, number):
         ayat_exist = cls.query.filter_by(ownerID=ownerID, surah=surah, ayatnumber=number).first()
         return ayat_exist
 
-    
+    def FindByRange(ownerID, surah, start, end):
+        return db.session.query(HifzModel).\
+        filter( HifzModel.ownerID==ownerID).\
+        filter( HifzModel.surah==surah).\
+        filter( HifzModel.ayatnumber <= end ).\
+        filter( HifzModel.ayatnumber >= start )
 
 
     def save_to_db(self):
