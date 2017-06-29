@@ -25,6 +25,8 @@ def PopulateSurahData():
             ayatcts_in_surah[surah['number']] = surah['numberOfAyahs']
             surah_names[surah['number']] = surah['englishName']
 
+        return ayatcts_in_surah
+
         # ayatcts_in_surah = [{k:v  for k,v in surah.items() if k == 'number' or k == 'numberOfAyahs'} for surah in surah_data]
 
         # global  surah_list
@@ -40,6 +42,7 @@ def PopulateJuzData():
         data = json.load(data_file)
         global surah_limits_in_all_juz
         surah_limits_in_all_juz = data.get('data')
+        return surah_limits_in_all_juz
 
 
 def isSurahValid(surah):

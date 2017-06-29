@@ -34,7 +34,9 @@ class HifzModel(db.Model):
 
     @classmethod
     def FindHifzBySurahAndNumber(cls, ownerID, surah, number):
+        # print("Filtering by surah {} ayat {}".format(surah, number))
         ayat_exist = cls.query.filter_by(ownerID=ownerID, surah=surah, ayatnumber=number).first()
+        # print("Ayat exist: {}".format(ayat_exist))
         return ayat_exist
 
     def FindByRange(ownerID, surah, start, end):

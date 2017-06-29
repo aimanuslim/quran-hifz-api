@@ -4,7 +4,7 @@ from flask_jwt import JWT
 
 from security import authenticate, identity
 from resources.user import UserRegister
-from resources.hifz import Hifz, MemorizedAyats
+from resources.hifz import Hifz
 from common.utilities import PopulateSurahData, PopulateJuzData
 
 
@@ -28,7 +28,7 @@ jwt = JWT(app, authenticate, identity)  # /auth
 
 api.add_resource(Hifz, '/hifz')
 # api.add_resource(MemorizedAyatsRange, '/memorized/range/<range>')
-api.add_resource(MemorizedAyats, '/memorized')
+# api.add_resource(MemorizedAyats, '/memorized')
 api.add_resource(UserRegister, '/register')
 
 if __name__ == '__main__':

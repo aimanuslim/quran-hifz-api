@@ -14,9 +14,8 @@ class Hifz(Resource):
     )
 
     parser.add_argument('ayatnumber',
-        # type=int,
+        type=int,
         required=False,
-        action='append',
         help="the number of the ayat within the surah"
     )
 
@@ -80,7 +79,7 @@ class Hifz(Resource):
         surahnumber = data.get('surah')
 
         ayatnumber = data.get('ayatnumber')
-        if ayatnumber: 
+        if ayatnumber and isinstance(ayatnumber, str): 
             ayatnumber = ayatnumber.replace("\'","\"") # to satisfy json loads requirement, need to replace single quotes with double quotes
             ayatnumber = json.loads(ayatnumber)
 
@@ -338,7 +337,7 @@ class Hifz(Resource):
         return {'Some parameters are missing!'}, 400
 
 
-class MemorizedAyats(Resource):
+# class MemorizedAyats(Resource):
     @jwt_required()
     def get(self):
         data = Hifz.parser.parse_args()
