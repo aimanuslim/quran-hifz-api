@@ -10,6 +10,7 @@ import unittest
 import tempfile
 import os
 from db import db
+import pdb
 
 
 
@@ -44,16 +45,29 @@ class test_main(unittest.TestCase):
 	print("Running tests..")
 	ayt_cts = PopulateSurahData()
 	surah_limits = PopulateJuzData()
-	token = None
+	token
+	usersDetails = [{
+		"username" : "aiman",
+		"password" : "chan"
+		"token" : ""
+	}, 
+	{
+		"username" : "dummy",
+		"password" : "chan"
+		"token" : ""
+	}]
+
+
 
 	@classmethod
 	def setUpClass(cls):
 		cls.app = app.create_test_app()
 		db.init_app(cls.app)
 		with cls.app.app_context():
-			db.create_all()
-			db.session.add(UserModel("aiman", "chan"))
-			db.session.commit()
+			for userDetail in usersDetails:
+				db.create_all()
+				db.session.add(UserModel(userDetail["username"], userDetail["password"]))
+				db.session.commit()
 		with cls.app.test_client() as c:
 			print(json.dumps({"username": 'aiman', "password":'chan'}))
 			res = c.post('/auth', data=json.dumps({"username": 'aiman', "password":'chan'}),  content_type='application/json')
@@ -63,10 +77,22 @@ class test_main(unittest.TestCase):
 
 
 	def test_wr_surah(self):
+		# pdb.set_trace()
 		data = { "surah" : 5 }
 		with self.app.test_client() as c:
 			res = c.post('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + self.token})
 			assert res.status_code == 201, "status: {}".format(res.status_code)
+			json_data = json.loads(res.get_data(as_text=True))
+			assert len(json_data.get('ayats')) == self.ayt_cts[json_data.get('surah')]
+
+	def test_wr_surah_wparams(self):
+
+		data = { "surah" : 5 }
+		with self.app.test_client() as c:
+			res = c.post('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + self.token})
+			assert res.status_code == 201, "status: {}".format(res.status_code)
+			json_data = json.loads(res.get_data(as_text=True))
+			assert len(json_data.get('ayats')) == self.ayt_cts[json_data.get('surah')]		
 
 	def test_get(self):
 		with self.app.test_client() as c:
