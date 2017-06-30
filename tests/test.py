@@ -1,9 +1,16 @@
 from tests.common import *
-from nose.tools import assert_equal, assert_not_equal, assert_raises, raises
-import unittest
+# from nose.tools import assert_equal, assert_not_equal, assert_raises, raises
 from random import sample, randint
 from common.utilities import PopulateJuzData, PopulateSurahData
+from models.user import UserModel
+
+
 import app
+import unittest
+import tempfile
+import os
+from db import db
+
 
 
 def wr_surah(token, surah):
@@ -41,42 +48,49 @@ class test_main(unittest.TestCase):
 
 	@classmethod
 	def setUpClass(cls):
-		cls.token = auth()
-
-	def test_positive_checking(self):
-		wr_surah(self.token, 4)
-		wr_ayat(self.token, 3, 5)
-		wr_juz(self.token, 20)
-
-	def test_negative_checking(self):
-		assert_raises(AssertionError, wr_surah, self.token, 144)
-
-		assert_raises(AssertionError, wr_ayat, self.token, 1, 300)
-
-		assert_raises(AssertionError, wr_juz, self.token, 56)
-	# for i in range(1, 5):
-		
-	# 	surah = randint(1, 114)
-	# 	wr_surah(token, surah)
-
-	# 	surah = randint(1, 114)
-	# 	ayat = randint(1, ayt_cts[surah])
-	# 	wr_ayat(token, surah, ayat)
-
-	# 	juz = randint(1, 30)
-	# 	wr_juz(token, juz)
+		cls.app = app.create_test_app()
+		db.init_app(cls.app)
+		with cls.app.app_context():
+			db.create_all()
+			db.session.add(UserModel("aiman", "chan"))
+			db.session.commit()
+		with cls.app.test_client() as c:
+			print(json.dumps({"username": 'aiman', "password":'chan'}))
+			res = c.post('/auth', data=json.dumps({"username": 'aiman', "password":'chan'}),  content_type='application/json')
+			print(res)
+			json_data = json.loads(res.get_data(as_text=True))
+			cls.token = json_data.get('access_token')
 
 
-	# for i in range(1, 5):
-	# 	surah = randint(115, 200)
-	# 	assert_raises(AssertionError, wr_surah, token, surah)
+	def test_wr_surah(self):
+		data = { "surah" : 5 }
+		with self.app.test_client() as c:
+			res = c.post('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + self.token})
+			assert res.status_code == 201, "status: {}".format(res.status_code)
 
-	# 	surah = randint(1, 114)
-	# 	ayat = randint(ayt_cts[surah] + 1, ayt_cts[surah] + 200)
-	# 	assert_raises(AssertionError, wr_ayat, token, surah, ayat)
+	def test_get(self):
+		with self.app.test_client() as c:
+			res = c.get('/hifz', headers={'Authorization': 'JWT ' + self.token})
+			assert res.status_code == 200, "status: {}".format(res.status_code)
 
-	# 	juz = randint(31, 60)
-	# 	assert_raise(AssertionError, wr_juz, token, juz)
+	@classmethod
+	def tearDownClass(cls):
+		with cls.app.app_context():
+			db.drop_all()
+
+
+	# def test_positive_checking(self):
+	# 	wr_surah(self.token, 4)
+	# 	wr_ayat(self.token, 3, 5)
+	# 	wr_juz(self.token, 20)
+
+	# def test_negative_checking(self):
+	# 	assert_raises(AssertionError, wr_surah, self.token, 144)
+
+	# 	assert_raises(AssertionError, wr_ayat, self.token, 1, 300)
+
+	# 	assert_raises(AssertionError, wr_juz, self.token, 56)
+
 
 
 

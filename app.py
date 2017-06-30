@@ -27,9 +27,20 @@ def intialize_quran_data():
 jwt = JWT(app, authenticate, identity)  # /auth
 
 api.add_resource(Hifz, '/hifz')
-# api.add_resource(MemorizedAyatsRange, '/memorized/range/<range>')
-# api.add_resource(MemorizedAyats, '/memorized')
 api.add_resource(UserRegister, '/register')
+
+def create_test_app():
+	app = Flask(__name__)
+	app.config['TESTING'] = True
+	app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+	app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///test.db'
+	app.secret_key = 'jose'
+
+	api = Api(app)
+	jwt = JWT(app, authenticate, identity)  # /auth
+	api.add_resource(Hifz, '/hifz')
+	api.add_resource(UserRegister, '/register')
+	return app
 
 if __name__ == '__main__':
     from db import db
