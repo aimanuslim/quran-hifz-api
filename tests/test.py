@@ -40,6 +40,15 @@ def wr_ayat(token, surah, ayat):
 
 
 
+hifz_parameters = [
+	"theme",
+	"date_refreshed",
+	"group",
+	"difficulty",
+	"note",
+	"just_refreshed"
+]
+
 
 class test_main(unittest.TestCase):
 	print("Running tests..")
@@ -69,30 +78,31 @@ class test_main(unittest.TestCase):
 				db.session.add(UserModel(userDetail["username"], userDetail["password"]))
 				db.session.commit()
 		with cls.app.test_client() as c:
-			print(json.dumps({"username": 'aiman', "password":'chan'}))
-			res = c.post('/auth', data=json.dumps({"username": 'aiman', "password":'chan'}),  content_type='application/json')
-			print(res)
-			json_data = json.loads(res.get_data(as_text=True))
-			cls.token = json_data.get('access_token')
+			for i in range(0, len(self.usersDetails)):
+				res = c.post('/auth', data=json.dumps({"username": self.usersDetails[i].get("username"), "password": self.usersDetails[i].get("password")}),  content_type='application/json')
+				json_data = json.loads(res.get_data(as_text=True))
+				self.usersDetails[i]["token"] = json_data.get('access_token')
 
 
 	def test_wr_surah(self):
 		# pdb.set_trace()
-		data = { "surah" : 5 }
+		
 		with self.app.test_client() as c:
-			res = c.post('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + self.token})
-			assert res.status_code == 201, "status: {}".format(res.status_code)
-			json_data = json.loads(res.get_data(as_text=True))
-			assert len(json_data.get('ayats')) == self.ayt_cts[json_data.get('surah')]
+			for userDetail in self.usersDetails:
+				data = { "surah" : randint(1, 114) }
+				res = c.post('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + userDetail.get("token")})
+				assert res.status_code == 201, "status: {}".format(res.status_code)
+				json_data = json.loads(res.get_data(as_text=True))
+				assert len(json_data.get('ayats')) == self.ayt_cts[json_data.get('surah')]
 
 	def test_wr_surah_wparams(self):
-
-		data = { "surah" : 5 }
 		with self.app.test_client() as c:
-			res = c.post('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + self.token})
-			assert res.status_code == 201, "status: {}".format(res.status_code)
-			json_data = json.loads(res.get_data(as_text=True))
-			assert len(json_data.get('ayats')) == self.ayt_cts[json_data.get('surah')]		
+			for userDetail in self.usersDetails:
+				data = { "surah" : randint(1, 114) }
+				res = c.post('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + userDetail.get("token")})
+				assert res.status_code == 201, "status: {}".format(res.status_code)
+				json_data = json.loads(res.get_data(as_text=True))
+				assert len(json_data.get('ayats')) == self.ayt_cts[json_data.get('surah')]
 
 	def test_get(self):
 		with self.app.test_client() as c:
