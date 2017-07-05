@@ -95,6 +95,7 @@ class test_main(unittest.TestCase):
 				assert len(json_data.get('ayats')) == self.ayt_cts[json_data.get('surah')]
 
 	def test_wr_surah_wparams(self):
+		# pdb.set_trace()
 		with self.app.test_client() as c:
 			for userDetail in self.usersDetails:
 				data = { "surah" : randint(1, 114) }
@@ -105,15 +106,15 @@ class test_main(unittest.TestCase):
 				data["date_refreshed"] = "01/07/2017" 
 
 				res = c.post('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + userDetail.get("token")})
-				assert res.status_code == 201, "status: {}".format(res.status_code)
 				json_data = json.loads(res.get_data(as_text=True))
-				assert len(json_data.get('ayats')) == self.ayt_cts[json_data.get('surah')]
+				assert res.status_code == 201, "status: {} msg: {}".format(res.status_code, json_data.get('message'))
 				hifz_dict = json_data.get('ayats')[randint(1, self.ayt_cts[json_data.get('surah')])]
+				assert len(json_data.get('ayats')) == self.ayt_cts[json_data.get('surah')]
 				assert hifz_dict.get("theme") == "dummy_theme" + userDetail.get('username')
 				assert hifz_dict.get("note") == "dummy_note" + userDetail.get('username')
 				assert hifz_dict.get("group") == "dummy_group" + userDetail.get('username')
 				assert hifz_dict.get("difficulty") == 4
-				assert hifz_dict.get("date_refreshed") == "01/07/2017"
+				assert hifz_dict.get("last_refreshed") == "01/07/2017"
 
 
 	def test_get(self):

@@ -4,6 +4,7 @@ import pdb
 import requests
 import json
 from common.utilities import FindJuzGivenSurahAndAyat
+import datetime
 
 class HifzModel(db.Model):
     __tablename__ = 'hifz'
@@ -30,7 +31,7 @@ class HifzModel(db.Model):
 
 
     def json(self):
-        return {'owner': self.ownerID, 'surah': self.surah, 'juz': self.juz, 'ayat number': self.ayatnumber, 'revisit_frequency': self.revisit_frequency, 'last_refreshed': self.last_refreshed, 'difficulty': self.difficulty, 'theme': self.theme, 'note': self.note, 'group': self.group}
+        return {'owner': self.ownerID, 'surah': self.surah, 'juz': self.juz, 'ayat number': self.ayatnumber, 'revisit_frequency': self.revisit_frequency, 'last_refreshed': self.last_refreshed.strftime('%d/%m/%Y') if self.last_refreshed is not None else self.last_refreshed, 'difficulty': self.difficulty, 'theme': self.theme, 'note': self.note, 'group': self.group}
 
     @classmethod
     def FindHifzBySurahAndNumber(cls, ownerID, surah, number):

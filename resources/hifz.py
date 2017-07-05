@@ -2,6 +2,7 @@ from flask_restful import Resource, reqparse
 from flask_jwt import JWT, jwt_required, current_identity
 from models.hifz import HifzModel
 from common.utilities import *
+import datetime
 import json
 
 
@@ -49,7 +50,7 @@ class Hifz(Resource):
         help="This field is for you to input notes for the ayat"
     )
     parser.add_argument('date_refreshed',
-        type=lambda x: datetime.strptime(x,'%Y-%m-%dT%H'),
+        type=lambda x: datetime.datetime.strptime(x,'%d/%m/%Y'),
         required=False,
         help="This field is to specify the last time this ayat was refreshed"
     )
@@ -61,7 +62,7 @@ class Hifz(Resource):
     )
 
     parser.add_argument('group',
-        type=int,
+        type=str,
         required=False,
         help="This field is for you to specify ayat's group, if you need to chain it with some other similar ayats"
     )
@@ -143,6 +144,7 @@ class Hifz(Resource):
                     hifz.save_to_db()
                     saved_array.append(hifz.json())
                 except:
+                    
                     return {"message": "An error occurred inserting the data."}, 500
             return {'surah': surahnumber, 'ayats': saved_array}, 201
 
@@ -372,16 +374,18 @@ class Hifz(Resource):
 
 
 def modify_properties(hifz, data):
+    import pdb
     if data.get('theme'):
         hifz.theme = data.get('theme')
     if data.get('date_refreshed'):
-        hifz.theme = data.get('date_refreshed')
+        hifz.last_refreshed = data.get('date_refreshed')
     if data.get('group'):
-        hifz.theme = data.get('group')
+        hifz.group = data.get('group')
     if data.get('difficulty'):
-        hifz.theme = data.get('difficulty')
+        hifz.difficulty = data.get('difficulty')
     if data.get('note'):
-        hifz.theme = data.get('note')
+        hifz.note = data.get('note')
     if data.get('just_revisited'):
         hifz.revisit_frequency += 1
+
     return hifz
