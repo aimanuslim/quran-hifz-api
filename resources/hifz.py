@@ -349,7 +349,7 @@ class Hifz(Resource):
         start = data.get('start')
         end = data.get('end')
 
-        print('Ayat is {}'.format(ayat))
+        # print('Ayat is {}'.format(ayat))
 
         if surah and start and end and not ayat:
             return {'ayats': list(map(lambda x: x.json(), HifzModel.FindByRange(str(current_identity.id), surah, start, end)

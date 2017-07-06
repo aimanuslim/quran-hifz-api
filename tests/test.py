@@ -88,17 +88,53 @@ class test_main(unittest.TestCase):
 		
 		with self.app.test_client() as c:
 			for userDetail in self.usersDetails:
-				data = { "surah" : randint(1, 114) }
+				data = { "surah" : 13 }
 				res = c.post('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + userDetail.get("token")})
-				assert res.status_code == 201, "status: {}".format(res.status_code)
+				assert res.status_code == 201, "status: {} msg: {}".format(res.status_code, json_data.get('message'))
 				json_data = json.loads(res.get_data(as_text=True))
+
+				# check total stored ayats
 				assert len(json_data.get('ayats')) == self.ayt_cts[json_data.get('surah')]
 
-	def test_wr_surah_wparams(self):
+		print("Writing surah test PASSED")
+
+
+
+	def test_wr_juz(self):
+		with self.app.test_client() as c:
+			for userDetail in self.usersDetails:
+				data = { "juz" : 20}
+				res = c.post('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + userDetail.get("token")})		
+				json_data = json.loads(res.get_data(as_text=True))
+				assert res.status_code == 201, "status: {} msg: {}".format(res.status_code, json_data.get('message'))
+				ayat_json = json_data.get('ayats')
+				last_ayat = json_data.get('ayats')[-1]
+				first_ayat = json_data.get('ayats')[0]
+
+				juz_limits = self.surah_limits[data.get('juz') - 1] 
+				first_surah_in_juz = min(int(k) for k in juz_limits.keys())
+				last_surah_in_juz = max(int(k) for k in juz_limits.keys())
+				# pdb.set_trace()
+				# check first surah in the juz
+				assert first_ayat.get('surah') == first_surah_in_juz
+				#check last surah in the juz
+				assert last_ayat.get('surah') == last_surah_in_juz
+				# check first ayat number within the first surah inn the juz
+				assert first_ayat.get('ayat number') == juz_limits.get(str(first_surah_in_juz))[0]
+				# check the last ayat number within the last surah in the juz
+				assert last_ayat.get('ayat number') == juz_limits.get(str(last_surah_in_juz))[-1]
+
+		print("Writing juz test PASSED")
+
+
+	def test_wr_with_params(self):
+		self.wr_surah_wparams({"surah": 3}, "surah")
+		self.wr_surah_wparams({"juz": 30}, "juz")
+
+	def wr_surah_wparams(self, data, mode):
 		# pdb.set_trace()
 		with self.app.test_client() as c:
 			for userDetail in self.usersDetails:
-				data = { "surah" : randint(1, 114) }
 				data["theme"] = "dummy_theme" + userDetail.get('username')
 				data["group"] = "dummy_group" + userDetail.get('username')
 				data["note"] = "dummy_note" + userDetail.get('username')
@@ -108,13 +144,21 @@ class test_main(unittest.TestCase):
 				res = c.post('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + userDetail.get("token")})
 				json_data = json.loads(res.get_data(as_text=True))
 				assert res.status_code == 201, "status: {} msg: {}".format(res.status_code, json_data.get('message'))
-				hifz_dict = json_data.get('ayats')[randint(1, self.ayt_cts[json_data.get('surah')])]
-				assert len(json_data.get('ayats')) == self.ayt_cts[json_data.get('surah')]
+
+
+				# check ayat count within surah
+				assert len(json_data.get('ayats')) == self.ayt_cts[json_data.get(mode) - 1]
+				# pick any ayat within surah
+				hifz_dict = json_data.get('ayats')[randint(1, self.ayt_cts[json_data.get(mode)]) - 1]
+
+				# check params that was specified.
 				assert hifz_dict.get("theme") == "dummy_theme" + userDetail.get('username')
 				assert hifz_dict.get("note") == "dummy_note" + userDetail.get('username')
 				assert hifz_dict.get("group") == "dummy_group" + userDetail.get('username')
 				assert hifz_dict.get("difficulty") == 4
 				assert hifz_dict.get("last_refreshed") == "01/07/2017"
+
+		print("Writing {} with params test PASSED".format(data.keys()))
 
 
 	def test_get(self):
@@ -122,6 +166,8 @@ class test_main(unittest.TestCase):
 			for userDetail in self.usersDetails:
 				res = c.get('/hifz', headers={'Authorization': 'JWT ' + userDetail.get('token')})
 				assert res.status_code == 200, "status: {}".format(res.status_code)
+
+		print("Getting all hifz test PASSED")	
 
 	@classmethod
 	def tearDownClass(cls):
