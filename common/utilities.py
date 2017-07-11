@@ -46,12 +46,12 @@ def PopulateJuzData():
 
 
 def isSurahValid(surah):
-    return surah < 115 or surah > 0
+    return surah < 115 and surah > 0
     
 
 def AyatIsInRange(surahnumber, ayat_number):
     ayat_number = int(ayat_number)
-    print("max: {} an: {}".format(ayatcts_in_surah[surahnumber], ayat_number))
+    # print("max: {} an: {}".format(ayatcts_in_surah[surahnumber], ayat_number))
     if ayat_number < 0 or ayat_number > ayatcts_in_surah[surahnumber]:
         return False
     return True

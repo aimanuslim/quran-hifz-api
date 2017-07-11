@@ -15,7 +15,7 @@ class Hifz(Resource):
     )
 
     parser.add_argument('ayatnumber',
-        type=int,
+        # type=int,
         required=False,
         help="the number of the ayat within the surah"
     )
@@ -108,7 +108,7 @@ class Hifz(Resource):
                     hifz = modify_properties(hifz, data)
                     try:
                         hifz.save_to_db()
-                        print("Saved: {}".format(hifz.json()))
+                        # print("Saved: {}".format(hifz.json()))
                         saved_array.append(hifz.json());
                     except:
                         return {"message": "An error occurred inserting the data."}, 500
