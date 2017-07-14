@@ -157,6 +157,26 @@ class test_main(unittest.TestCase):
 
 		print("Writing juz test PASSED")
 
+	def test_wr_juz_invalid(self):
+		data = { "juz" : 50 }
+		with self.app.test_client() as c:
+			for userDetail in self.usersDetails:
+				res = c.post('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + userDetail.get("token")})
+				json_data = json.loads(res.get_data(as_text=True))
+				assert res.status_code == 400, "status: {} msg: {}".format(res.status_code, json_data.get('message'))
+		print("Writing invalid juz test PASSED")
+
+	def test_wr_ayat_range_missing_params(self):
+		data = {
+			"surah": 15, 
+			"ayatnumber": 
+				{"start": 4}
+			}
+		with self.app.test_client() as c:
+			for userDetail in self.usersDetails:
+				res = c.post('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + userDetail.get("token")})
+				assert res.status_code == 400, "status: {} msg: {}".format(res.status_code, json_data.get('message'))
+		print("Writing missing params for ayat range test PASSED")
 
 	def test_wr_with_params(self):
 		self.wr_surah_wparams({"surah": 3}, "surah")
@@ -172,6 +192,15 @@ class test_main(unittest.TestCase):
 				assert json_data.get("surah") == data.get("surah")
 				assert json_data.get("ayatnumber") == data.get("ayatnumber") 			
 		print("Writing single ayat test PASSED")
+
+	def test_wr_ayat_already_exist(self):
+		data = {"surah": 64, "ayatnumber": 13}
+		with self.app.test_client() as c:
+			for userDetail in self.usersDetails:
+				res = c.post('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + userDetail.get("token")})
+				res = c.post('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + userDetail.get("token")})
+				assert res.status_code == 400, "status: {} msg: {}".format(res.status_code, json_data.get('message'))
+		print("Writing ayat that already exists test PASSED")
 
 	def test_wr_range_ayat(self):
 		data = {

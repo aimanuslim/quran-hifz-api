@@ -93,16 +93,16 @@ class Hifz(Resource):
 
             if  isinstance(ayatnumber, dict):
                 # sanity checking
-                if not ayatnumber['start'] or not ayatnumber['end']:
+                if not ayatnumber.get('start') or not ayatnumber.get('end'):
                     print(ayatnumber)
                     return {'message': "Invalid ayat limits format"}, 400
                 else:
-                    if not AyatIsInRange(surahnumber, ayatnumber['start']) or not AyatIsInRange(surahnumber, ayatnumber['end']):
+                    if not AyatIsInRange(surahnumber, ayatnumber.get('start')) or not AyatIsInRange(surahnumber, ayatnumber.get('end')):
                         return {'message': "Either limit is out of range"}, 400
                 
                 # start saving
                 saved_array = []
-                for an in range(ayatnumber['start'], ayatnumber['end'] + 1):
+                for an in range(ayatnumber.get('start'), ayatnumber.get('end') + 1):
                     if HifzModel.FindHifzBySurahAndNumber(str(current_identity.id), surahnumber, an): return {'message': "Some of the ayat in range are already in database."}, 400
                     hifz = HifzModel(str(current_identity.id), surahnumber, an)
                     hifz = modify_properties(hifz, data)
@@ -149,8 +149,9 @@ class Hifz(Resource):
             return {'surah': surahnumber, 'ayats': saved_array}, 201
 
         if juz and not surahnumber and not ayatnumber:
+
             if not JuzInRange(juz):
-                return {"message", "Juz is not valid"}, 400
+                return {"message": "Juz is not valid"}, 400
 
             # a list of tuples where each tuple will contain a surah number and its last ayat that is contained within that juz
             limits_dict = FindSurahWithAyatInJuz(juz)
@@ -184,13 +185,13 @@ class Hifz(Resource):
             if not isSurahValid(surahnumber):
                 return {'message': "Surah is not valid"}, 400
             if  isinstance(ayatnumber, dict):
-                if not ayatnumber['start'] or not ayatnumber['end']:
+                if not ayatnumber.get('start') or not ayatnumber.get('end'):
                     return {'message': "Invalid ayat limits format"}, 400
                 else:
-                    if not AyatIsInRange(surahnumber, ayatnumber['start']) or not AyatIsInRange(surahnumber, ayatnumber['end']):
+                    if not AyatIsInRange(surahnumber, ayatnumber.get('start')) or not AyatIsInRange(surahnumber, ayatnumber.get('end')):
                         return {'message': "Either limit is out of range"}, 400
                 saved_array = []
-                for an in range(ayatnumber['start'], ayatnumber['end'] + 1):
+                for an in range(ayatnumber.get('start'), ayatnumber.get('end') + 1):
                     hifz = HifzModel.FindHifzBySurahAndNumber(str(current_identity.id), surahnumber, an);
                     if not hifz: continue
                     try:
@@ -267,15 +268,15 @@ class Hifz(Resource):
 
             if  isinstance(ayatnumber, dict):
                 # sanity checking
-                if not ayatnumber['start'] or not ayatnumber['end']:
+                if not ayatnumber.get('start') or not ayatnumber.get('end'):
                     return {'message': "Invalid ayat limits format"}, 400
                 else:
-                    if not AyatIsInRange(surahnumber, ayatnumber['start']) or not AyatIsInRange(surahnumber, ayatnumber['end']):
+                    if not AyatIsInRange(surahnumber, ayatnumber.get('start')) or not AyatIsInRange(surahnumber, ayatnumber.get('end')):
                         return {'message': "Either limit is out of range"}, 400
                 
                 # start saving
                 saved_array = []
-                for an in range(ayatnumber['start'], ayatnumber['end'] + 1):
+                for an in range(ayatnumber.get('start'), ayatnumber.get('end') + 1):
                     hifz = HifzModel.FindHifzBySurahAndNumber(str(current_identity.id), surahnumber, an)
                     if not hifz: hifz = HifzModel(str(current_identity.id), surahnumber, an)
                     hifz = modify_properties(hifz, data)
