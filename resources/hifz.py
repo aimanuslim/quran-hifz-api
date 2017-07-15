@@ -94,7 +94,6 @@ class Hifz(Resource):
             if  isinstance(ayatnumber, dict):
                 # sanity checking
                 if not ayatnumber.get('start') or not ayatnumber.get('end'):
-                    print(ayatnumber)
                     return {'message': "Invalid ayat limits format"}, 400
                 else:
                     if not AyatIsInRange(surahnumber, ayatnumber.get('start')) or not AyatIsInRange(surahnumber, ayatnumber.get('end')):
@@ -285,13 +284,13 @@ class Hifz(Resource):
                         saved_array.append(hifz.json());
                     except:
                         return {"message": "An error occurred updating the data."}, 500
-                    return {'ayats': saved_array};
+                return {'ayats': saved_array};
             else:
-                if AyatIsInRange(surahnumber, ayatnumber):
+                if not AyatIsInRange(surahnumber, ayatnumber):
                     return {'message': "Ayat is out of range"}, 400
 
-                hifz = HifzModel.FindHifzBySurahAndNumber(str(current_identity.id), surahnumber, an)
-                if not hifz: hifz = HifzModel(str(current_identity.id), surahnumber, an)
+                hifz = HifzModel.FindHifzBySurahAndNumber(str(current_identity.id), surahnumber, ayatnumber)
+                if not hifz: hifz = HifzModel(str(current_identity.id), surahnumber, ayatnumber)
                 hifz = modify_properties(hifz, data)
 
                 try:
@@ -321,15 +320,15 @@ class Hifz(Resource):
 
         if juz and not surahnumber and not ayatnumber:
             if not JuzInRange(juz):
-                return {"message", "Juz is not valid"}, 400
+                return {"message": "Juz is not valid"}, 400
 
             # a list of tuples where each tuple will contain a surah number and its last ayat that is contained within that juz
             limits_dict = FindSurahWithAyatInJuz(juz)
             saved_array = []
             for (sn,limits) in limits_dict.items():
                 for an in range(limits[0], limits[1] + 1):
-                    hifz = HifzModel.FindHifzBySurahAndNumber(str(current_identity.id), surahnumber, an)
-                    if not hifz: hifz = HifzModel(str(current_identity.id), surahnumber, an)
+                    hifz = HifzModel.FindHifzBySurahAndNumber(str(current_identity.id), sn, an)
+                    if not hifz: hifz = HifzModel(str(current_identity.id), sn, an)
                     hifz = modify_properties(hifz, data)
                     try:
                         hifz.save_to_db()
