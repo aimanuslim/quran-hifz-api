@@ -37,11 +37,26 @@ data_ayat_range_valid = {
 			{"start": 4,
 			"end": 37}
 		}
+
+data_ayat_range_partial_valid = {
+	"surah": 15, 
+		"ayatnumber": 
+			{"start": 4,
+			"end": 20}	
+}
+
+data_ayat_range_exceed_valid = {
+		"surah": 15, 
+		"ayatnumber": 
+			{"start": 21,
+			"end": 45}
+		}
+
 data_nonexistant_range = {
 		"surah": 15, 
 		"ayatnumber": 
-			{"start": 4,
-			"end": 39}
+			{"start": 38,
+			"end": 40}
 		}		
 data_juz_valid = { "juz" : 20}
 data_juz_invalid = { "juz" : 50 }
@@ -75,8 +90,10 @@ class test_main(unittest.TestCase):
 	
 
 
+
+
 	@classmethod
-	def setUpClass(cls):
+	def setUp(cls):
 		cls.app = app.create_test_app()
 		db.init_app(cls.app)
 		with cls.app.app_context():
@@ -124,23 +141,123 @@ class test_main(unittest.TestCase):
 
 
 		# delete invalid first
-		self.del_nonexistant_ayat(data_nonexistant)
-		self.del_nonexistant_range_ayat(data_nonexistant_range)
-		self.del_ayat_invalid(data_ayat_invalid)
-		self.del_range_ayat_invalid(data_ayat_range_invalid)
-		self.del_surah_invalid(data_surah_invalid)
-		self.del_juz_invalid(data_juz_invalid)
-		self.del_ayat_range_missing_params(data_missing_params)
+		self.invalid_hifz_deletion(data_nonexistant)
+		print("Deleting non existant ayat test PASSED")
+		self.invalid_hifz_deletion(data_nonexistant_range)
+		print("Deleting non existant range of ayats test PASSED")	
+		self.invalid_hifz_deletion(data_ayat_invalid)
+		print("Deleting invalid ayat test PASSED")	
+		self.invalid_hifz_deletion(data_ayat_range_invalid)
+		print("Deleting invalid ayat range test PASSED")	
+		self.invalid_hifz_deletion(data_ayat_range_exceed_valid)
+		print("Deleting partially exceeding ayat range test PASSED")
+		self.invalid_hifz_deletion(data_surah_invalid)
+		print("Deleting invalid surah test PASSED")	
+		self.invalid_hifz_deletion(data_juz_invalid)
+		print("Deleting invalid juz test PASSED")	
+		self.invalid_hifz_deletion(data_missing_params)
+		print("Deleting ayat with missing params test PASSED")	
+
 
 		# delete existing ayat
-		self.del_ayat(data_ayat_valid)
-		self.del_range_ayat(data_ayat_range_valid)
-		self.del_surah(data_surah_valid)
-		self.del_juz(data_juz_valid)
-		self.put_hifz_wparams(data_surah_wparams, "surah")
-		self.put_hifz_wparams(data_juz_wparams, "juz")
+		self.valid_hifz_deletion(data_ayat_valid)
+		print("Deleting ayat test PASSED")			
+		self.valid_hifz_deletion(data_ayat_range_partial_valid)
+		print("Deleting partial ayat range test PASSED")			
+		self.valid_hifz_deletion(data_surah_valid)
+		print("Deleting surah test PASSED")			
+		self.valid_hifz_deletion(data_juz_valid)
+		print("Deleting juz test PASSED")	
 
-		
+	def test_Flow2(self):
+		with self.app.test_client() as c:
+			user1 = self.usersDetails[0]
+			user2 = self.usersDetails[1]
+			data1 = {"juz": 1}
+			data2 = {"juz": 3}
+
+			res = c.post('/hifz', data=json.dumps(data1), content_type='application/json', headers={'Authorization': 'JWT ' + user1.get("token")})
+			assert res.status_code == 201
+			res = c.get('/hifz', headers={'Authorization': 'JWT ' + user2.get("token")})
+			json_data = json.loads(res.get_data(as_text=True))
+			assert len(json_data.get('ayats')) == 0
+		print("Data separation test succesful")
+
+
+	def test_Flow3(self):
+		with self.app.test_client() as c:
+			user1 = self.usersDetails[0]
+
+			juz_filter_value = 4
+			for tosave_juz in [3,4,5]:
+				res = c.post('/hifz', data=json.dumps({"juz":tosave_juz}), content_type='application/json', headers={'Authorization': 'JWT ' + user1.get("token")})
+
+			res = c.get('/hifz?juz={}'.format(juz_filter_value), headers={'Authorization': 'JWT ' + user1.get("token")})
+			json_data = json.loads(res.get_data(as_text=True))
+			
+			assert json_data.get('ayats')[0].get('juz') == juz_filter_value
+			assert json_data.get('ayats')[-1].get('juz') == juz_filter_value
+
+			surah_filter_value = 16
+			for tosave_surah in [15,16,17]:
+				res = c.post('/hifz', data=json.dumps({"surah":tosave_surah}), content_type='application/json', headers={'Authorization': 'JWT ' + user1.get("token")})
+			res = c.get('/hifz?surah={}'.format(surah_filter_value), headers={'Authorization': 'JWT ' + user1.get("token")})
+			json_data = json.loads(res.get_data(as_text=True))
+			assert json_data.get('ayats')[0].get('surah') == surah_filter_value
+			assert json_data.get('ayats')[-1].get('surah') == surah_filter_value
+
+			surah_filter_value = 17
+			start_ayat = 76
+			end_ayat = 89
+			res = c.get("/hifz?surah={}&start={}&end={}".format(surah_filter_value, start_ayat, end_ayat), headers={'Authorization': 'JWT ' + user1.get("token")})
+			json_data = json.loads(res.get_data(as_text=True))
+			
+			assert json_data.get('ayats')[0].get('surah') == surah_filter_value
+			assert json_data.get('ayats')[-1].get('surah') == surah_filter_value
+			assert json_data.get('ayats')[0].get('ayatnumber') == start_ayat
+
+			assert json_data.get('ayats')[-1].get('ayatnumber') == end_ayat
+		print("Getting filtered hifz test PASSED")
+
+
+
+	def test_Flow4(self):
+		with self.app.test_client() as c:
+			user1 = self.usersDetails[0]
+
+			surah_toselect = 15
+			for tosave_surah in [15,16,17]:
+				res = c.post('/hifz', data=json.dumps({"surah":tosave_surah}), content_type='application/json', headers={'Authorization': 'JWT ' + user1.get("token")})
+			pdb.set_trace()
+			res = c.get('/random?surah={}'.format(surah_toselect), headers={'Authorization': 'JWT ' + user1.get("token")})
+			json_data = json.loads(res.get_data(as_text=True))
+			print("Selected: {}".format(json_data.get('selected')))
+			assert json_data.get('selected')[0].get('surah') == surah_toselect
+
+
+
+
+
+
+
+
+
+	def invalid_hifz_deletion(self, data):
+		with self.app.test_client() as c:
+			for userDetail in self.usersDetails:
+				res = c.delete('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + userDetail.get("token")})
+				json_data = json.loads(res.get_data(as_text=True))
+				assert res.status_code == 400, "status: {} msg: {}".format(res.status_code, json_data.get('message'))
+				print("Message: {}".format(json_data.get('message')))
+
+	def valid_hifz_deletion(self, data):
+		with self.app.test_client() as c:
+			for userDetail in self.usersDetails:
+				res = c.delete('/hifz', data=json.dumps(data), content_type='application/json', headers={'Authorization': 'JWT ' + 
+					userDetail.get("token")})
+				json_data = json.loads(res.get_data(as_text=True))
+				assert res.status_code == 200, "status: {} msg: {}".format(res.status_code, json_data.get('message'))	
+				print("Message: {}".format(json_data.get('message')))
 
 	def put_surah_invalid(self, data):
 		
@@ -477,7 +594,7 @@ class test_main(unittest.TestCase):
 		print("Getting all hifz test PASSED")	
 
 	@classmethod
-	def tearDownClass(cls):
+	def tearDown(cls):
 		with cls.app.app_context():
 			db.drop_all()
 

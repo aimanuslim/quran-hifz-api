@@ -4,7 +4,7 @@ from flask_jwt import JWT
 
 from security import authenticate, identity
 from resources.user import UserRegister
-from resources.hifz import Hifz
+from resources.hifz import Hifz, HifzRandom
 from common.utilities import PopulateSurahData, PopulateJuzData
 
 
@@ -28,13 +28,14 @@ jwt = JWT(app, authenticate, identity)  # /auth
 
 api.add_resource(Hifz, '/hifz')
 api.add_resource(UserRegister, '/register')
+api.add_resource(HifzRandom, '/hifz/random')
 
 def create_test_app():
 	app = Flask(__name__)
 	app.config['TESTING'] = True
 	app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 	app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///test.db'
-	app.secret_key = 'jose'
+	app.secret_key = 'ian'
 
 	api = Api(app)
 	jwt = JWT(app, authenticate, identity)  # /auth

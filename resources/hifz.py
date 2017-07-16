@@ -192,7 +192,7 @@ class Hifz(Resource):
                 saved_array = []
                 for an in range(ayatnumber.get('start'), ayatnumber.get('end') + 1):
                     hifz = HifzModel.FindHifzBySurahAndNumber(str(current_identity.id), surahnumber, an);
-                    if not hifz: continue
+                    if not hifz: return {"message": "Some ayat in range does not exist"}, 400
                     try:
                         hifz.delete_from_db();
                     except:
@@ -203,7 +203,7 @@ class Hifz(Resource):
                     return {'message': "Ayat is out of range"}, 400
 
                 hifz = HifzModel.FindHifzBySurahAndNumber(str(current_identity.id), surahnumber, ayatnumber)
-                if not hifz: return {"message", "Ayat not found"}, 400
+                if not hifz: return {"message": "Ayat not found"}, 400
                 try:
                     hifz.delete_from_db()
                 except:
@@ -220,7 +220,7 @@ class Hifz(Resource):
             ayatct = FindAyatCountIn(surahnumber)
             for an in range(1, ayatct + 1):
                 hifz = HifzModel.FindHifzBySurahAndNumber(str(current_identity.id), surahnumber, an)
-                if not hifz: continue 
+                if not hifz: return {"message": "Some ayat in surah does not exist"}, 400
                 try:
                     hifz.delete_from_db()
                 except:
@@ -229,17 +229,15 @@ class Hifz(Resource):
 
         if juz and not surahnumber and not ayatnumber:
             if not JuzInRange(juz):
-                return {"message", "Juz is not valid"}, 400
+                return {"message": "Juz is not valid"}, 400
 
             # a list of tuples where each tuple will contain a surah number and its last ayat that is contained within that juz
             limits_dict = FindSurahWithAyatInJuz(juz)
-            print(limits_dict)
             for (sn,limits) in limits_dict.items():
                 for an in range(limits[0], limits[1] + 1):
                     hifz = HifzModel.FindHifzBySurahAndNumber(str(current_identity.id), sn, an)
-                    if not hifz: continue
+                    if not hifz: return {"message": "Some ayat in juz does not exist"}, 400
                     try:
-                        print("deleting")
                         hifz.delete_from_db()
                     except:
                         return {"message": "An error occurred deleting the data."}, 500
@@ -349,22 +347,21 @@ class Hifz(Resource):
         start = data.get('start')
         end = data.get('end')
 
-        # print('Ayat is {}'.format(ayat))
 
         if surah and start and end and not ayat:
             return {'ayats': list(map(lambda x: x.json(), HifzModel.FindByRange(str(current_identity.id), surah, start, end)
                 ))  }, 200
 
         if surah and ayat:
-            print("returning filtered by ayat")
+            # print("returning filtered by ayat")
             return {'ayats': list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), surah=surah, ayatnumber=ayat)))  }, 200
 
         if surah and not ayat:
-            print("returning filtered by surah")
+          # print("returning filtered by surah")
             return {'ayats': list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), surah=surah )))  }, 200
 
         if juz:
-            print("returning filtered by juz")
+          # print("returning filtered by juz")
             return {'ayats': list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), juz=juz )))  }, 200
 
 
@@ -389,3 +386,38 @@ def modify_properties(hifz, data):
         hifz.revisit_frequency += 1
 
     return hifz
+
+
+class HifzRandom(Hifz):
+    @jwt_required()
+    def get(self):
+        data = Hifz.parser.parse_args()
+        surah = data.get('surah')
+        juz = data.get('juz')
+        ayat = data.get('ayatnumber')
+        start = data.get('start')
+        end = data.get('end')
+
+
+        if surah and start and end and not ayat:
+            ayats = list(map(lambda x: x.json(), HifzModel.FindByRange(str(current_identity.id), surah, start, end)
+            ))
+            idx = random.randint(0, len(ayats))
+            return {'selected':   ayats[idx] }, 200
+
+        if surah and not ayat:
+        # print("returning filtered by surah")
+            ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), surah=surah )))
+            idx = random.randint(0, len(ayats))
+            return {'selected':   ayats[idx] }, 200
+
+        if juz:
+        # print("returning filtered by juz")
+            ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), juz=juz )))
+            idx = random.randint(0, len(ayats))
+            return {'selected':   ayats[idx] }, 200
+
+        ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id)  )))
+        return {'selected':   ayats[idx] }, 200
+
+        
