@@ -348,6 +348,7 @@ class Hifz(Resource):
         end = data.get('end')
 
 
+
         if surah and start and end and not ayat:
             return {'ayats': list(map(lambda x: x.json(), HifzModel.FindByRange(str(current_identity.id), surah, start, end)
                 ))  }, 200
@@ -388,36 +389,88 @@ def modify_properties(hifz, data):
     return hifz
 
 
-class HifzRandom(Hifz):
+class HifzRecommendation(Resource):
+    parser.add_argument('surah',
+        type=int,
+        required=False,
+        help="Filter by surah number that you memorized"
+    )
+
+    parser.add_argument('random',
+        type=bool,
+        required=False,
+        help="Specify whether the recommendation will be based on a random selection"
+    )
+
+     parser.add_argument('start',
+        type=int,
+        required=False,
+        help="starting range of ayat from which to filter from"
+    )
+
+    parser.add_argument('end',
+        type=int,
+        required=False,
+        help="the ending range of ayat at which to end filtering from"
+    )
+
+    parser.add_argument('theme',
+        type=str,
+        required=False,
+        help="Filter by the theme of the ayat"
+    )
+
+    parser.add_argument('juz',
+        type=int,
+        required=False,
+        help="filter by the juz number that was memorized"
+    )
+
+    parser.add_argument('difficulty',
+        type=int,
+        required=False,
+        help="Filter by ayat's difficulty"
+    )
+
+    parser.add_argument('group',
+        type=str,
+        required=False,
+        help="Filter by group of similar ayats"
+    )
+
     @jwt_required()
     def get(self):
         data = Hifz.parser.parse_args()
         surah = data.get('surah')
         juz = data.get('juz')
-        ayat = data.get('ayatnumber')
         start = data.get('start')
-        end = data.get('end')
+        random = data.get('random')
 
+        difficulty = data.get('difficulty')
+        theme = data.get('theme')
+        group = data.get('group')
 
-        if surah and start and end and not ayat:
-            ayats = list(map(lambda x: x.json(), HifzModel.FindByRange(str(current_identity.id), surah, start, end)
-            ))
-            idx = random.randint(0, len(ayats))
+        if random:
+            if surah and start and end and not ayat:
+                ayats = list(map(lambda x: x.json(), HifzModel.FindByRange(str(current_identity.id), surah, start, end)
+                ))
+                idx = random.randint(0, len(ayats))
+                return {'selected':   ayats[idx] }, 200
+
+            if surah and not ayat:
+                ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), surah=surah )))
+                idx = random.randint(0, len(ayats))
+                return {'selected':   ayats[idx] }, 200
+
+            if juz:
+                ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), juz=juz )))
+                idx = random.randint(0, len(ayats))
+                return {'selected':   ayats[idx] }, 200
+
+            ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id)  )))
             return {'selected':   ayats[idx] }, 200
+        else:
+            ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id)  )))
 
-        if surah and not ayat:
-        # print("returning filtered by surah")
-            ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), surah=surah )))
-            idx = random.randint(0, len(ayats))
-            return {'selected':   ayats[idx] }, 200
-
-        if juz:
-        # print("returning filtered by juz")
-            ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), juz=juz )))
-            idx = random.randint(0, len(ayats))
-            return {'selected':   ayats[idx] }, 200
-
-        ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id)  )))
-        return {'selected':   ayats[idx] }, 200
 
         
