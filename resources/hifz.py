@@ -508,6 +508,8 @@ class HifzRecommendation(Resource):
             if theme:
                 filtered = [a if a.theme == theme for a in ayats]
 
+            
+
             return {'selected' : [a.json for a in filtered]}
 
 
