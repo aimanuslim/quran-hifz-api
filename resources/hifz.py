@@ -402,6 +402,12 @@ class HifzRecommendation(Resource):
         help="Specify whether the recommendation will be based on a random selection"
     )
 
+    parser.add_argument('all_users'
+        type=bool,
+        required=False,
+        help="Dictates whether data will be analyzed by user's own hifz or by the all user's hifz"
+    )
+
      parser.add_argument('start',
         type=int,
         required=False,
@@ -452,25 +458,61 @@ class HifzRecommendation(Resource):
 
         if random:
             if surah and start and end and not ayat:
-                ayats = list(map(lambda x: x.json(), HifzModel.FindByRange(str(current_identity.id), surah, start, end)
+                if all_users:
+                    ayats = list(map(lambda x: x.json(), HifzModel.FindByRange(None, surah, start, end)))
+                else:    
+                    ayats = list(map(lambda x: x.json(), HifzModel.FindByRange(str(current_identity.id), surah, start, end)
                 ))
                 idx = random.randint(0, len(ayats))
                 return {'selected':   ayats[idx] }, 200
 
             if surah and not ayat:
-                ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), surah=surah )))
+                if all_users:
+                    ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(surah=surah )))
+                else:    
+                    ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), surah=surah )))
                 idx = random.randint(0, len(ayats))
                 return {'selected':   ayats[idx] }, 200
 
             if juz:
-                ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), juz=juz )))
+                if all_users:
+                    ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(juz=juz )))
+                else:    
+                    ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id), juz=juz )))
                 idx = random.randint(0, len(ayats))
                 return {'selected':   ayats[idx] }, 200
 
-            ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id)  )))
+            if all_users:
+                ayats = list(map(lambda x: x.json(), HifzModel.query.all()))
+            else:
+                ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id)  )))
             return {'selected':   ayats[idx] }, 200
+
         else:
-            ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id)  )))
+            if all_users:
+                ayats = list(map(lambda x: x.json(), HifzModel.query.all()))
+            else:
+                ayats = list(map(lambda x: x.json(), HifzModel.query.filter_by(ownerID=str(current_identity.id)  )))
+            if [difficulty, theme, group].count(True) != 1:
+                return {"message" : "ayat can only be filtered by either difficulty, theme or group"} 
+
+            if not any(difficulty, theme, group): 
+                return {"message" : "no filter criteria specified"}               
+
+            if difficulty:
+                filtered = [a if a.difficulty == difficulty for a in ayats]
+
+            if group:
+                filtered = [a if a.group == group for a in ayats]
+
+            if theme:
+                filtered = [a if a.theme == theme for a in ayats]
+
+            return {'selected' : [a.json for a in filtered]}
+
+
+
+
 
 
         

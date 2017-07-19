@@ -41,11 +41,17 @@ class HifzModel(db.Model):
         return ayat_exist
 
     def FindByRange(ownerID, surah, start, end):
-        return db.session.query(HifzModel).\
-        filter( HifzModel.ownerID==ownerID).\
-        filter( HifzModel.surah==surah).\
-        filter( HifzModel.ayatnumber <= end ).\
-        filter( HifzModel.ayatnumber >= start )
+        if ownerID:
+            return db.session.query(HifzModel).\
+            filter( HifzModel.ownerID==ownerID).\
+            filter( HifzModel.surah==surah).\
+            filter( HifzModel.ayatnumber <= end ).\
+            filter( HifzModel.ayatnumber >= start )
+        else:
+            return db.session.query(HifzModel).\
+            filter( HifzModel.surah==surah).\
+            filter( HifzModel.ayatnumber <= end ).\
+            filter( HifzModel.ayatnumber >= start )
 
 
     def save_to_db(self):
