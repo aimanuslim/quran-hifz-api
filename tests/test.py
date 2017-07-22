@@ -228,11 +228,40 @@ class test_main(unittest.TestCase):
 			surah_toselect = 15
 			for tosave_surah in [15,16,17]:
 				res = c.post('/hifz', data=json.dumps({"surah":tosave_surah}), content_type='application/json', headers={'Authorization': 'JWT ' + user1.get("token")})
-			pdb.set_trace()
+			# pdb.set_trace()
 			res = c.get('/random?surah={}'.format(surah_toselect), headers={'Authorization': 'JWT ' + user1.get("token")})
 			json_data = json.loads(res.get_data(as_text=True))
 			print("Selected: {}".format(json_data.get('selected')))
-			assert json_data.get('selected')[0].get('surah') == surah_toselect
+			assert json_data.get('selected').get('surah') == surah_toselect
+
+			print("Random within surah PASSED")
+
+			juz_toselect = 24
+			for tosave_juz in [23,24,26]:
+				res = c.post('/hifz', data=json.dumps({"juz":tosave_juz}), content_type='application/json', headers={'Authorization': 'JWT ' + user1.get("token")})
+			# pdb.set_trace()
+			res = c.get('/random?juz={}'.format(juz_toselect), headers={'Authorization': 'JWT ' + user1.get("token")})
+			json_data = json.loads(res.get_data(as_text=True))
+			print("Selected: {}".format(json_data.get('selected')))
+			assert json_data.get('selected').get('juz') == juz_toselect
+			print("Random within juz PASSED")
+
+
+
+			surah_toselect = 17
+			start_of_surah_toselect = 5
+			end_of_surah_toselect = 10
+
+			
+			res = c.get('/random?surah={}&start={}&end={}'.format(surah_toselect, start_of_surah_toselect, end_of_surah_toselect), headers={'Authorization': 'JWT ' + user1.get("token")})
+			json_data = json.loads(res.get_data(as_text=True))
+			print("Selected: {}".format(json_data.get('selected')))
+			assert json_data.get('selected').get('surah') == surah_toselect
+			assert json_data.get('selected').get('ayatnumber') <= end_of_surah_toselect
+			assert json_data.get('selected').get('ayatnumber') >= start_of_surah_toselect 
+
+			print("Random within surah with range PASSED")
+
 
 
 

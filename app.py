@@ -4,7 +4,7 @@ from flask_jwt import JWT
 
 from security import authenticate, identity
 from resources.user import UserRegister
-from resources.hifz import Hifz, HifzRandom
+from resources.hifz import Hifz, HifzRecommendation
 from common.utilities import PopulateSurahData, PopulateJuzData
 
 
@@ -28,7 +28,7 @@ jwt = JWT(app, authenticate, identity)  # /auth
 
 api.add_resource(Hifz, '/hifz')
 api.add_resource(UserRegister, '/register')
-api.add_resource(HifzRandom, '/hifz/random')
+api.add_resource(HifzRecommendation, '/random')
 
 def create_test_app():
 	app = Flask(__name__)
@@ -41,6 +41,7 @@ def create_test_app():
 	jwt = JWT(app, authenticate, identity)  # /auth
 	api.add_resource(Hifz, '/hifz')
 	api.add_resource(UserRegister, '/register')
+	api.add_resource(HifzRecommendation, '/random')
 	return app
 
 if __name__ == '__main__':
